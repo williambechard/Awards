@@ -1,0 +1,216 @@
+<div id="picturesContainer">
+    <div id="pictures">
+        <div id="picSrc">
+        </div>
+        <div id='picTitleContainer'><div id='picTitle'></div>
+        <input class="adminOnly left" type="button" value="Add" onclick="newPic(); return false;" >
+        <input class="adminOnly right"  onclick="editPics(); return false;" style="margin-right:15px;" type="button" value="Edit All"></span>
+    </div>
+</div>
+<script>
+/*
+// #region JS scripts Loading
+var callback = function(){
+     // Handler when the DOM is fully loaded
+     LoadSodByKey("Awards.js", setupSlideShow);
+};
+if (
+    document.readyState === "complete" ||
+    (document.readyState !== "loading" && !document.documentElement.doScroll)
+) {
+  callback();
+} else {
+  document.addEventListener("DOMContentLoaded", callback);
+}d
+// #endregion
+*/
+
+var list;
+var listID;
+var PictureLibraryName='AwardsPictures';
+
+ExecuteOrDelayUntilScriptLoaded(Start, "sp.js");
+
+function Start() {
+    console.log('PictureCarousel.html:Start(). FUNCTION');
+    var currentcontext = new SP.ClientContext.get_current();
+    list = currentcontext.get_web().get_lists().getByTitle(PictureLibraryName);
+    currentcontext.load(list, 'Id');
+    currentcontext.executeQueryAsync(Function.createDelegate(this, OnSuccess), Function.createDelegate(this, onFailed));
+}
+
+function OnSuccess() {
+    console.log('listID for picture carousel = ',list.get_id()._m_guidString$p$0);
+    listID=list.get_id()._m_guidString$p$0;
+}
+
+function onFailed(sender, args) {
+    alert('Request failed. ' + args.get_message() + '\n' + args.get_stackTrace());
+}
+
+function setupSlideShow(){
+    console.log('PictureCarousel.html:setupSlideShow(). FUNCTION');
+
+    //We get allPromises from Awards.js. It contains all the promises from our AJAX calls
+    //   we hook into it here and only execute when they are all done.
+    /*
+    var ajaxPictures = SPHGetListItems(PictureLibraryName, '?$select=EncodedAbsUrl,Title,Description,ToShow', baseURL);
+
+    ajaxPictures.done(function(data){
+        console.log('pictures data = ', data);
+        var onlyShownPics = data.filter(function(img){
+            return img.ToShow;
+        })
+
+        $.each(onlyShownPics, function(i,v){
+            imagesSlideShow.push(new slideImage(v.EncodedAbsUrl, v.Title)); //rather go ahead and throw image into the DOM
+            var addImage = $('<img id="picIMG" class="showPointer" href="'+v.EncodedAbsUrl+'" target="_blank" src="'+v.EncodedAbsUrl+'" title="'+v.Title+'">');
+            addImage.hide();
+            addImage.on('click',function(){
+                //handles opening up the image when clicked
+                window.open($(this).attr('href'), '_blank');
+            });
+
+            $('#picSrc').append(addImage);
+        })
+
+        startSlideShow();
+
+    }).fail(function(e){ 
+        alert('Failed Getting Pictures! ' + e.responseText);
+        //unlock input
+    });
+     */
+
+}
+
+var imagesSlideShow=[];
+ var secondsToShowSlide = 5
+
+ function slideImage(URL, Title){
+     this.URL = URL;
+     this.Title = Title;
+ }
+
+ function editPics(){
+    openModal(baseURL + '/' + PictureLibraryName + '/Forms/AllItems.aspx?IsDlg=1', 'Add/Update Picture', 1000, 500);
+
+ }
+
+ function newPic(){
+      openModal(baseURL + '/_layouts/15/Upload.aspx?List={'+listID+'}&amp;RootFolder=', 'Add/Update Picture', 1000, 500);
+ }
+
+ function startSlideShow(){
+    console.log('PictureCarousel.html:startSlideShow(). FUNCTION - kicks off and continues the slide show.');
+
+
+
+
+
+//only if there are slides
+if(imagesSlideShow.length>0){
+   console.log('PictureCarousel.html:function startSlideShow() - imageSlideShow.length>0');
+   var slideIndex = 0;
+   
+   //$('#picIMG').attr('src', imagesSlideShow[slideIndex].URL);
+   //$('#picIMG').attr('href', imagesSlideShow[slideIndex].URL);
+   $($('#picSrc').children()[slideIndex]).show();
+   console.log('PictureCarousel.html:function startSlideShow() - attempting to show: ', $($('#picSrc').children()[slideIndex]) );
+   $('#picTitle').html($($('#picSrc').children()[slideIndex]).prop('title'));
+   
+   //grab the element used for the image. this is for IE as it doesnt support content-fit
+    
+   var imageElem = $('#picSrc').children()[slideIndex];
+
+   //function to help IE work as the other browsers do with content-fit
+   objectFit(imageElem);
+   
+   //our interval which flips through the pictures
+   setInterval(function(){
+       //change slideshow image
+       slideIndex++;
+       if(slideIndex > imagesSlideShow.length-1) slideIndex=0;
+       
+ 
+        $.each( $($('#picSrc').children()), function(i,v){
+            if(i!=slideIndex) $(v).hide();
+        });
+       // console.log('slide index ', slideIndex);
+
+       $($('#picSrc').children()[slideIndex]).show();
+        $('#picTitle').html($($('#picSrc').children()[slideIndex]).prop('title'));
+        //grab the element used for the image. this is for IE as it doesnt support content-fit
+        var imageElem = $('#picSrc').children()[slideIndex];
+
+       objectFit(imageElem);
+   }, secondsToShowSlide * 1000);
+}else console.error('no slides loaded to show')
+ }
+
+ //credit to: https://www.stevefenton.co.uk/2019/09/fixing-css-object-fit-for-internet-explorer/
+ // Fixes IE (and maybe Firefox? ) support for content-fit
+ function objectFit(image) {
+    if ('objectFit' in document.documentElement.style === false && image.currentStyle['object-fit']) {
+        image.style.background = 'url("' + image.src + '") no-repeat 50%/' + image.currentStyle['object-fit'];
+        image.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='" + image.width + "' height='" + image.height + "'%3E%3C/svg%3E";
+    }
+}
+
+</script>
+
+<style>
+.right{
+    float:right;
+}
+.left{
+    float:left;
+}
+    #picturesContainer{
+    text-align: center;
+    /*transform:translateY(50px);*/
+}
+#pictures{
+    width:500px;
+    height:400px;
+    border:1px solid black;
+    margin:auto;
+    background-color:black!important;
+    transform:translateY(25px);
+}
+#picTitleContainer{
+    width:500px;
+    height:25px;
+    font-size: large;
+    position:relative;
+    bottom:20%;
+    background-color:black!important;
+    color:white;
+    font-weight:bold;
+}
+#picSrc{
+    margin:10px;
+    width: 95%;
+    height:95%;
+    background-color: currentColor!important;
+    
+}
+#picIMG{
+    width:inherit;
+    height:inherit;
+    object-fit:contain;
+    margin:auto;
+  
+}
+.showPointer{
+    cursor: pointer;
+}
+</style><html xmlns:mso="urn:schemas-microsoft-com:office:office" xmlns:msdt="uuid:C2F41010-65B3-11d1-A29F-00AA00C14882"><head>
+<!--[if gte mso 9]><xml>
+<mso:CustomDocumentProperties>
+<mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Editor msdt:dt="string">BECHARD, WILLIAM J MSgt USAF HAF NASIC/SCP</mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Editor>
+<mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Author msdt:dt="string">BECHARD, WILLIAM J MSgt USAF HAF NASIC/SCP</mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Author>
+<mso:Order msdt:dt="string">600.000000000000</mso:Order>
+</mso:CustomDocumentProperties>
+</xml><![endif]-->
+</head>

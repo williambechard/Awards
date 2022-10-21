@@ -1,0 +1,137 @@
+<link rel="stylesheet" type="text/css" href="/teams/23840/SiteAssets/Scripts/jquery.dataTables.min.css">
+<style>
+    #loggedInUserPckgsDataTable{
+        margin:5px;
+    }
+    .showPointer{
+        cursor: pointer;
+    }
+        
+    #loggedInUserPckgsDataTable caption{
+        font-size: x-large;
+        font-weight: bold;
+    }
+    button{
+        cursor: pointer;
+    }
+    </style>
+        <table id="loggedInUserPckgsDataTable" class="display" cellspacing="0" width="100%"> 
+            <caption>Your Submitted Packages</caption>     
+            <thead>    
+                <tr> 
+                    <th>Year</th></th>
+                    <th>Target Board</th>       
+                    <th>Category</th>
+                    <th>Nominee</th>
+                    <th></th>
+                </tr>    
+            </thead>       
+        </table>  
+<script>
+ 
+// #region JS scripts Loading
+/*
+var callback = function(){ 
+    //SP.SOD.loadMultiple(['jquery.js','DataTables.js', 'Awards.js'], setupLoggedInUsersPckgs); 
+    //LoadSodByKey("Awards.js", setupLoggedInUsersPckgs);
+};
+if (
+    document.readyState === "complete" ||
+    (document.readyState !== "loading" && !document.documentElement.doScroll)
+) {
+  //callback();
+} else {
+  //document.addEventListener("DOMContentLoaded", callback);
+}*/
+// #endregion
+var sSheet;
+var ruleToChange;
+
+function setupLoggedInUsersPckgs(){
+    console.error('LoggedInUserPackages.html:setupLoggedInUsersPckgs(). FUNCTION - responsible for the logged in user packages dataTable');
+    var targetTable = 'loggedInUserPckgsDataTable';
+    //We get allPromises from Awards.js. It contains all the promises from our AJAX calls
+    //   we hook into it here and only execute when they are all done.
+    //$.when.apply($,allPromises).done(function(d){
+        var allLoggedInUserPckgs = allPackages.filter(function(pckg) { return pckg.Author==userID;})
+        console.log('LoggedInUserPackages.html:setupLoggedInUsersPckgs(). Determined that all logged in users pckgs =', allLoggedInUserPckgs);
+        try { 
+            $('#' + targetTable).DataTable({    
+                "bAutoWidth": false, //we want to control the width of our columns specifically, if we were ok with a standardard width we could set this to true
+                "aaData": allLoggedInUserPckgs, //this is the ajax data that we are passing in
+                "aoColumns": [   //we use this to hook into each column based on its mData string to place the info from the data (ajax sp list) into the correct column
+                    {    
+                        "mData": "Year", //this needs to be the internal SP column/field name
+                      
+                    },
+                    {    
+                        "mData": "TargetBoardTitle", //this needs to be the internal SP column/field name
+      
+                    },        
+                    {    
+                        "mData": "Cat", //this needs to be the internal SP column/field name
+ 
+                    },        
+                    {    
+                        "mData": "NomineeName", //this needs to be the internal SP column/field name
+                        "render": function(data, type){
+                            return data + " <button onClick='event.stopPropagation(); deleteRecord(this); return false;' style='float:right;'>X</button>"
+                        }
+                    }],
+                    createdRow: function(row, data, dataIndex) { //this is basically a for:each of each row
+               
+                        // We are adding the data-id (the SP ID) to the row  as its id property
+                        $(row).prop('id', 'pckgBoardItem_'+  data.ID);
+                        $(row).addClass('showPointer');
+    
+                    }
+            });
+        
+            sSheet = getStyleSheet('AwardsModular.css');
+//find('tr')
+
+    $('#' +targetTable +' tbody').on('click', 'tr ', function (){
+        console.log('on click ', $(this)[0]);
+                if($(this).is('tr')){
+                    ruleToChange = getStyle('.ms-dlgTitle',sSheet);
+                    ruleToChange.backgroundColor="darkgrey";
+                    openModal(baseURL +'/Lists/Packages/EditForm.aspx?ID=' + $(this).attr('id').split('_')[1], 'Package Info', 700, 800);
+                }
+    });
+            $('#' +targetTable).find('tbody').on('click', function(e){
+               
+            });
+
+            $('#' +targetTable).find('tbody').find('tr').addClass('showPointer');
+
+
+            $('.attachButton').on('click', function(e){
+                e.stopPropagation();
+            })
+         
+        }catch(e){
+            alert($(e));
+        }
+   // });
+}
+
+function deleteRecord(e){
+    var id = $($(e)[0]).closest('tr').attr('id').split('_')[1];
+    if(confirm("Are you sure you want to delete this record?")){
+        var itemDelete = SPHDeleteListItem('Packages', id.toString(), _spPageContextInfo.webAbsoluteUrl).done(function(data){
+       //item successfully deleted
+            window.location.reload(true);
+        }).fail(function(e){ alert('Failed Deleting Item! ' + e.responseText);});
+    }
+}
+
+
+</script><html xmlns:mso="urn:schemas-microsoft-com:office:office" xmlns:msdt="uuid:C2F41010-65B3-11d1-A29F-00AA00C14882"><head>
+<!--[if gte mso 9]><xml>
+<mso:CustomDocumentProperties>
+<mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Editor msdt:dt="string">BECHARD, WILLIAM J MSgt USAF HAF NASIC/SCP</mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Editor>
+<mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Author msdt:dt="string">BECHARD, WILLIAM J MSgt USAF HAF NASIC/SCP</mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Author>
+<mso:Order msdt:dt="string">300.000000000000</mso:Order>
+</mso:CustomDocumentProperties>
+</xml><![endif]-->
+</head>

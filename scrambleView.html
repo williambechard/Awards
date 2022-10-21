@@ -1,0 +1,76 @@
+<script src="/sites/20127/grps/sc/quality_assurance/SiteAssets/Scripts/jquery-3.4.1.min.js"></script>
+
+ 
+<div id='greyOutforms_Scramble'></div>
+<div id="loaderforms_Scramble"></div>
+ 
+
+<style>
+#loaderforms{
+    position:absolute;
+      left: 50%;
+      top: 50%;
+      z-index: 9999;
+      width: 150px;
+      height: 150px;
+      margin: -75px 0 0 -75px;
+      border: 16px solid #f3f3f3;
+      border-radius: 50%;
+      border-top: 16px solid #3498db;
+      width: 120px;
+      height: 120px;
+      -webkit-animation: spin 2s linear infinite;
+      animation: spin 2s linear infinite;
+}
+
+
+    
+    #greyOutforms{
+        position:absolute;
+        top:0px;
+        left:0px;
+        width:100%;
+        height:9999px;
+        background-color: white;
+        z-index:9998;
+    }
+    
+    @-webkit-keyframes spin {
+      0% { -webkit-transform: rotate(0deg); }
+      100% { -webkit-transform: rotate(360deg); }
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    /* #endregion End Loader */
+    
+</style>
+<script>
+$(document).ready(function(){
+
+    console.log('s4 = ', $('#s4-ribbonrow:visible'));
+    if($('#s4-ribbonrow:visible').length!=0){ 
+        $('.ms-formtable').empty();
+        $('.ms-listviewtable').empty();
+        $('a[title="Edit this list using Quick Edit mode."]').html('');
+        $('div.ms-csrlistview-controldiv').empty();
+    }
+
+          //remove the loader/greyed out cover screen
+          document.getElementById("loaderforms_Scramble").style.display = "none";
+      document.getElementById("greyOutforms_Scramble").style.display = "none";
+
+});
+
+</script>
+<html xmlns:mso="urn:schemas-microsoft-com:office:office" xmlns:msdt="uuid:C2F41010-65B3-11d1-A29F-00AA00C14882"><head>
+<!--[if gte mso 9]><xml>
+<mso:CustomDocumentProperties>
+<mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Editor msdt:dt="string">BECHARD, WILLIAM J MSgt USAF HAF NASIC/SCP</mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Editor>
+<mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Author msdt:dt="string">BECHARD, WILLIAM J MSgt USAF HAF NASIC/SCP</mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Author>
+<mso:Order msdt:dt="string">1900.00000000000</mso:Order>
+</mso:CustomDocumentProperties>
+</xml><![endif]-->
+</head>

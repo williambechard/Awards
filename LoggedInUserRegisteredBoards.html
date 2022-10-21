@@ -1,0 +1,137 @@
+<link rel="stylesheet" type="text/css" href="/teams/23840/SiteAssets/Scripts/jquery.dataTables.min.css">
+<style>
+    #loggedInUserBoards{
+        margin:5px;
+    }
+    .showPointer{
+        cursor: pointer;
+    }
+         
+    #loggedInUserBoards caption{
+        font-size: x-large;
+        font-weight: bold;
+    }
+    </style>
+        <table id="loggedInUserBoards" class="display" cellspacing="0" width="100%">  
+            <caption>Your Registered to Judge Board(s)</caption>  
+            <thead>    
+                <tr> 
+                    <th>Title</th></th>
+                    <th>Due To BESPIN</th>       
+                    <th>Final Due Date</th>
+                    <th>Board Date</th>
+                </tr>    
+            </thead>       
+        </table>  
+<script>
+// #region JS scripts Loading
+
+/*
+var callback = function(){
+    //SP.SOD.loadMultiple(['DataTables.js', 'Awards.js'], setupLoggedInUsersBoards);
+   
+    //LoadSodByKey("Awards.js", setupLoggedInUsersBoards);
+};
+if (
+    document.readyState === "complete" ||
+    (document.readyState !== "loading" && !document.documentElement.doScroll)
+) {
+    //ExecuteOrDelayUntilScriptLoaded(callback, 'jquery.js');
+  
+} else {
+  //document.addEventListener("DOMContentLoaded", callback);
+}*/
+// #endregion
+var sSheet;
+var ruleToChange;
+function setupLoggedInUsersBoards(){
+    console.log('LoggedInUserRegisteredBoards.html:setupLoggedInUsersBoards(). FUNCTION - responsible for the logged in user Boards dataTable');
+    var targetTable = 'loggedInUserBoards';
+    //We get allPromises from Awards.js. It contains all the promises from our AJAX calls
+    //   we hook into it here and only execute when they are all done.
+    //$.when.apply($,allPromises).done(function(d){
+        var targetBoards = [];
+        
+        
+        allJudges.filter(function(judge) {
+            console.log('userID(o%)==judge.Name.Id(o%)', userID, judge.Info.Id); 
+            if(userID==judge.Info.Id){
+                if(targetBoards.indexOf(judge.TargetBoard)==-1) targetBoards.push(judge.TargetBoard);
+            }
+            return true;
+        });
+        var allLoggedInUserBoards = allBoards.filter(function(board){
+            if(targetBoards.indexOf(board.ID)!=-1) return true;
+            else return false;
+        });
+
+        console.log('LoggedInUserRegisteredBoards.html:setupLoggedInUsersBoards(). Determined that all logged in users boards =', allLoggedInUserBoards);
+        try { 
+            $('#' + targetTable).DataTable({    
+                "bAutoWidth": false, //we want to control the width of our columns specifically, if we were ok with a standardard width we could set this to true
+                "aaData": allLoggedInUserBoards, //this is the ajax data that we are passing in
+                "aoColumns": [   //we use this to hook into each column based on its mData string to place the info from the data (ajax sp list) into the correct column
+                {    
+                        "mData": "Name", //this needs to be the internal SP column/field name
+                        "sWidth": '80px'  // we speciy the width
+                    },
+                    {    
+                        "mData": "SCDue", //this needs to be the internal SP column/field name
+                        "sWidth": '80px',  // we speciy the width
+                        'render': function(data, type, row){ //rather than render the data, we want to manipulate it first, we do so in this function
+                            if(typeof(data) !='undefined') return monthFriendlyName(data.split('T')[0].split('-')[1]) + ' ' + data.split('T')[0].split('-')[2]; //so here we just use moment.js to turn the date into a nice format
+                            else return '<span></span>';
+                        }
+                    },        
+                    {    
+                        "mData": "FinalDue", //this needs to be the internal SP column/field name
+                        "sWidth": '80px',  // we speciy the width
+                        'render': function(data, type, row){ //rather than render the data, we want to manipulate it first, we do so in this function
+                            if(typeof(data) !='undefined') return monthFriendlyName(data.split('T')[0].split('-')[1]) + ' ' + data.split('T')[0].split('-')[2]; //so here we just use moment.js to turn the date into a nice format
+                            else return '<span></span>';
+                        }
+                    },        
+                    {    
+                        "mData": "BoardDate", //this needs to be the internal SP column/field name
+                        "sWidth": '80px',  // we speciy the width
+                        'render': function(data, type, row){ //rather than render the data, we want to manipulate it first, we do so in this function
+                            if(typeof(data) !='undefined') return monthFriendlyName(data.split('T')[0].split('-')[1]) + ' ' + data.split('T')[0].split('-')[2]; //so here we just use moment.js to turn the date into a nice format
+                            else return '<span></span>';
+                        }
+                    }],
+                    createdRow: function(row, data, dataIndex) { //this is basically a for:each of each row
+               
+                    // We are adding the data-id (the SP ID) to the row  as its id property
+                    $(row).prop('id', 'loggedInUserBoardItem_'+  data.ID);
+                    }
+            });
+        
+            sSheet = getStyleSheet('AwardsModular.css');
+            $('#' +targetTable).find('tbody').find('tr').on('click', function(e){
+                ruleToChange = getStyle('.ms-dlgTitle',sSheet);
+                ruleToChange.backgroundColor="darkgrey";
+                openModal(baseURL +'/Lists/Boards/DispForm.aspx?ID=' + $(this).attr('id').split('_')[1], 'Board Info', 700, 800);
+            });
+
+            $('#' +targetTable).find('tbody').find('tr').addClass('showPointer');
+
+
+            $('.attachButton').on('click', function(e){
+                e.stopPropagation();
+            })
+         
+        }catch(e){
+            alert(e);
+        }
+    //});
+}
+
+</script><html xmlns:mso="urn:schemas-microsoft-com:office:office" xmlns:msdt="uuid:C2F41010-65B3-11d1-A29F-00AA00C14882"><head>
+<!--[if gte mso 9]><xml>
+<mso:CustomDocumentProperties>
+<mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Editor msdt:dt="string">BECHARD, WILLIAM J MSgt USAF HAF NASIC/SCP</mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Editor>
+<mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Author msdt:dt="string">BECHARD, WILLIAM J MSgt USAF HAF NASIC/SCP</mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Author>
+<mso:Order msdt:dt="string">400.000000000000</mso:Order>
+</mso:CustomDocumentProperties>
+</xml><![endif]-->
+</head>

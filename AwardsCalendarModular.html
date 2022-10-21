@@ -1,0 +1,199 @@
+<script src="/teams/23840/SiteAssets/Scripts/IE_FullCalendarPolyfill.js"></script>
+<script src="/teams/23840/SiteAssets/Scripts/FullCalendar.js"></script>
+<link rel="stylesheet" href="/teams/23840/SiteAssets/Scripts/FullCalendar.main.min.css">
+<!-- #region Loader HTML -->
+<div id='greyOutformsCal'></div>
+<div id="loaderformsCal"></div>
+<!-- #endregion -->
+<style>
+    .fc-daygrid-event-harness{
+        cursor: pointer;
+    }
+
+       /* #region Loader CSS */
+    #loaderformsCal{
+      position:absolute;
+      left: 50%;
+      top: 50%;
+      z-index: 9989;
+      width: 150px;
+      height: 150px;
+      margin: -75px 0 0 -75px;
+      border: 16px solid #f3f3f3;
+      border-radius: 50%;
+      border-top: 16px solid #3498db;
+      width: 120px;
+      height: 120px;
+      -webkit-animation: spin 2s linear infinite;
+      animation: spin 2s linear infinite;
+    }
+    
+    #greyOutformsCal{
+        position:absolute;
+        top:0px;
+        left:0px;
+        width:100%;
+        height:9999px;
+        background-color: white;
+        z-index:9988;
+    }
+    
+    @-webkit-keyframes spin {
+      0% { -webkit-transform: rotate(0deg); }
+      100% { -webkit-transform: rotate(360deg); }
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    /* #endregion End Loader */
+    .legend{
+        width:100px;
+        height:18px;
+        display:inline-block;
+        border-radius: 5px;
+        margin-top:10px;
+    }
+
+    .legendBlock + .legendBlock{
+        float:right !important;
+    }
+
+    .label{
+        font-size:medium;
+        font-style: bold;
+        display:inline-block;
+        width:200px;
+    }
+
+    #SCDue{
+        background-color: red;
+    }
+
+    #CSSDue{
+        background-color:gainsboro;
+    }
+    .legendBlock{
+         
+        display:inline-block;
+    }
+
+     
+
+   
+</style>
+
+<div id="awardsCalendar" style="width:100%;">
+</div>
+
+<script>
+ 
+ var calendar;  
+/*
+ // #region JS scripts Loading
+var callback = function(){ 
+    LoadSodByKey("Awards.js", calendarReady);
+};
+if (
+    document.readyState === "complete" ||
+    (document.readyState !== "loading" && !document.documentElement.doScroll)
+) {
+  callback();
+} else {
+  document.addEventListener("DOMContentLoaded", callback);
+}*/
+// #endregion
+
+function calendarReady(){
+    console.log('AwardsCalendarModular.html:cleandarReady(). FUNCTION - entry point for Awards Calendar Modular');
+    
+    var allCalendarPromises = [];
+    var allEvents=[];
+    var boardEvents=[];
+
+    //We get allPromises from Awards.js. It contains all the promises from our AJAX calls
+    //   we hook into it here and only execute when they are all done.
+    //$.when.apply($,allPromises).done(function(d){
+
+        var ajaxBoards = SPHGetListItems('Boards', '?$select=ID,Title,DueToSC,FinalDueDate,BoardDate,Categories', baseURL); //add the promise to our array
+        allCalendarPromises.push(ajaxBoards); //<- we could easily add more boards since we are using an array of promises!
+        
+        
+        var ajaxCalendar = SPHGetListItems('Awards', '?$Select=ID,Title,Beg_x0020_Callout_x0020_Month,Callout_x0020_Month,Description,Due_x0020_to_x0020_DPM,Due_x0020_to_x0020_Sponsor_x002f', '/sites/20127/dp/awards'); //add the promise to our array
+        allCalendarPromises.push(ajaxCalendar);
+
+        ajaxCalendar.done(function (data) {
+            console.log('css awards info ', data);
+            data.map(function (v) {
+                allEvents.push({
+                    'id': v.ID,
+                    'title': v.Title,
+                    'backgroundColor': 'gainsboro',
+                    'textColor': 'black',
+                    'start': v.Due_x0020_to_x0020_DPM,
+                    'end': v.Due_x0020_to_x0020_DPM,
+                    'modalURL': '/sites/20127/dp/awards/Lists/Awards/DispForm.aspx?ID=' + v.ID
+                });
+            });
+        });
+        
+
+        ajaxBoards.done(function (data) {
+            data.map(function (v) {
+                allEvents.push({
+                    'id': v.ID,
+                    'title': v.Title,
+                    'start': v.DueToSC,
+                    'textColor': 'white',
+                    'backgroundColor': 'red',
+                    'modalURL': baseURL + '/Lists/Boards/DispForm.aspx?ID=' + v.ID
+                });
+            });
+        });
+
+        $.when.apply($,allCalendarPromises).done(function(d){
+            //All done with everything
+
+            //Add the 2 arrays together (in this case only 1 array)
+            //var allDates = allEvents.concat(boardEvents);
+    
+            calendar = new FullCalendar.Calendar(document.getElementById('awardsCalendar'), {
+                initialView: 'dayGridMonth',
+                height: '400px',
+               // width: '300px',
+                displayEventTime: false,
+                events: allEvents,
+                eventClick: function (info) {
+                    openModal(info.event.extendedProps.modalURL, info.event.title, 600, 1000);
+                },
+                eventDidMount: function (info) {
+                    info.el.style.backgroundColor = info.event.backgroundColor;
+                    info.el.style.color = info.event.textColor;
+                }
+            });
+    
+            calendar.render(); //List WebPart Modifications
+
+            //add calendar legend
+            $('#awardsCalendar').closest('.ms-rtestate-field').append('\
+                <div class="legendBlock"><div class="label">BESPIN Due Suspense</div><div class="legend" id="SCDue"></div></div>\
+                <div class="legendBlock"><div class="label">CSS Due Suspense</div><div class="legend" id="CSSDue"></div></div>\
+            ');
+
+            document.getElementById("loaderformsCal").style.display = "none";
+            document.getElementById("greyOutformsCal").style.display = "none";
+
+        });
+    //});
+}
+
+</script><html xmlns:mso="urn:schemas-microsoft-com:office:office" xmlns:msdt="uuid:C2F41010-65B3-11d1-A29F-00AA00C14882"><head>
+<!--[if gte mso 9]><xml>
+<mso:CustomDocumentProperties>
+<mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Editor msdt:dt="string">BECHARD, WILLIAM J MSgt USAF HAF NASIC/SCP</mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Editor>
+<mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Author msdt:dt="string">BECHARD, WILLIAM J MSgt USAF HAF NASIC/SCP</mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Author>
+<mso:Order msdt:dt="string">1400.00000000000</mso:Order>
+</mso:CustomDocumentProperties>
+</xml><![endif]-->
+</head>

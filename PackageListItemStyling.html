@@ -1,0 +1,533 @@
+<script type="text/javascript" src="/teams/23840/SiteAssets/Scripts/jquery-3.6.0.min.js"></script>
+<script type="text/javascript" src="/teams/23840/SiteAssets/Scripts/SPHelper_v4.js"></script>
+<style>
+     .ms-dialog #s4-ribbonrow, .ms-dialog .ms-cui-topBar2, .ms-dialog .s4-notdlg, .ms-dialog .s4-pr s4-ribbonrowhidetitle, .ms-dialog .s4-notdlg noindex, .ms-dialog #ms-cui-ribbonTopBars, .ms-dialog #s4-titlerow, .ms-dialog #s4-pr s4-notdlg s4-titlerowhidetitle, .ms-dialog #s4-leftpanel-content {display:none !important;}
+    .ms-dialog .s4-ca{margin-left:0px !important; margin-right:0px !important;}
+    /* Center the loader */
+#loaderforms{
+  position:absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 9999;
+  width: 150px;
+  height: 150px;
+  margin: -75px 0 0 -75px;
+  border: 16px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 16px solid #3498db;
+  width: 120px;
+  height: 120px;
+  -webkit-animation: spin 2s linear infinite;
+  animation: spin 2s linear infinite;
+}
+
+#greyOutforms{
+    position:absolute;
+    top:0px;
+    left:0px;
+    width:100%;
+    height:100%;
+    background-color: white;
+    z-index:9998;
+}
+
+@-webkit-keyframes spin {
+  0% { -webkit-transform: rotate(0deg); }
+  100% { -webkit-transform: rotate(360deg); }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.noInput{
+    pointer-events: none;
+    background-color: gainsboro!important;
+}
+ 
+</style>
+<div id='greyOutforms'></div>
+<div id="loaderforms"></div>
+
+<script>
+
+var newFormTest;
+//Should not need to change - unless your Lists are located in a different site than the one you are using this for
+var baseURL= _spPageContextInfo.webAbsoluteUrl; 
+//init global variables
+var boardTitle="";
+var targetBoard="";
+//    holds all board objects - pulled from AJAX call
+var allBoards = [];
+var allPackages = [];
+var allClosedYearsForTargetBoard = [];
+var nameResolved=false;
+var resolvedNameID='';
+//    these are used in constructing the title
+var tBoard='', Cat='',Nom='',Org='',Year='';
+var Year='';
+//Object creation -Boards
+function Boards(ID, Name, SCDue, FinalDue, BoardDate, Categories){
+        this.ID = ID;
+        this.Name = Name;
+        
+        //we want to format dates to YYYY-MM-DD (original format had time which we strip with split)
+        // Example:
+        // 2020-05-17T00:20:23AM
+        // [0] = 2020-05-17
+        // [1] = 00:20:23AM
+        this.SCDue = SCDue.split('T')[0];
+        this.FinalDue = FinalDue.split('T')[0];
+        this.BoardDate=BoardDate.split('T')[0];
+
+        //Categories is a multi-line string, we want to separate by new line and store as array
+        //   Example:
+        //   SNCO
+        //   NCO
+        //   AMN
+        //   [0]=SNCO
+        //   [1]=NCO
+        //   [2]=AMN
+
+        var allCats = Categories;
+        if(Categories!=null) allCats = allCats.split(/\r?\n/); 
+        this.Categories = allCats;
+}
+
+function Packages(ID, Title, TargetBoard, Cat, Nominee, Org, Status, Attachments, Top, Year, Author, NomineeName, TBoard, MaskedID) {
+    this.ID = ID;
+    this.Title = Title;
+    this.TargetBoard = TargetBoard;
+    this.Cat = Cat;
+    this.Nominee = Nominee;
+    this.Org = Org;
+    this.Status = Status;
+    this.Attachments=Attachments;
+    this.Top = Top;
+    this.Year = Year;
+    this.Author = Author;
+    this.NomineeName = NomineeName;
+    this.TargetBoardTitle = TBoard;
+    this.MaskedID = MaskedID;
+  }
+
+  function getUserId(loginName) {
+    SP.SOD.executeFunc('sp.js', 'SP.ClientContext', function(){
+             var context = new SP.ClientContext.get_current();
+            this.user = context.get_web().ensureUser(loginName);
+            context.load(this.user);
+            context.executeQueryAsync(
+            Function.createDelegate(null, ensureUserSuccess),
+            Function.createDelegate(null, onFail)
+        );
+    });
+ }
+ function ensureUserSuccess() {
+    $('input[value="Save"][type="button"]').removeClass('locked');
+        nameResolved=true;
+        resolvedNameID=this.user.get_id();
+        console.log('PackageListItemStyling.html:ensureUserSuccess() from getUserId from resolved People Picker Field. The resolved userID =', resolvedNameID);
+        console.log(this.user.get_id());
+ }
+ function onFail(sender, args) {
+    $('input[value="Save"][type="button"]').removeClass('locked');
+        nameResolved=false;
+        resolvedNameID='';
+        console.error('PackageListItemStyling.html:onFail() from getUserId from resolved People Picker Field FAILED =', args.get_message());
+        alert('Query failed. Error: ' + args.get_message());
+ }
+
+ $(document).ready(function(){
+    $('input[title^="MaskedID"]').closest('tr').hide();
+    var origCat = $('input[id^="Category"]').val();
+    console.log('origCat = ', origCat);
+    newFormTest = location.href.includes('NewForm.aspx');
+    console.log('PackageListItemStyling. document.ready() FUNCTION - entry point to script');
+
+    //if Package status = "Closed" then lets make sure the Save button is hidden
+    console.log('this is a package? ' + $('select[id^="Status"').val());
+    
+    //Change - the submitter should be able to make edits (only if)...
+    if($('select[id^="Status"]').val()!="Open")
+    {
+        if(typeof isAdmin==='function'){
+
+        }else{
+            //hide the Save Button
+            //$('[value="Save"]').hide();
+            $('[value="Save"]').parent().empty();
+        }
+    }
+
+    var allPromises = [];
+    
+        //assume field resolved if in edit mode
+        if(!newFormTest)  nameResolved=true;
+
+    //handle catching the resoltion of the people picker field for the nominee
+    SP.SOD.executeFunc('clientpeoplepicker.js', 'SPClientPeoplePicker', function() {
+        var pickerDiv =$('[id^="Nominee"][title^="Nominee"]');
+        console.log('PackageListItemStyling. document.ready() Determined that people picker field = ', pickerDiv[0].id);
+         
+        var picker = SPClientPeoplePicker.SPClientPeoplePickerDict[pickerDiv[0].id];
+        console.log('PackageListItemStyling. document.ready() Determined that picker = ', picker);
+        
+        picker.OnUserResolvedClientScript = function(peoplePickerId, resolvedNameObj) {
+            //It will get the desired display name of the people from picker div, similarly any other property can be accessed via selectedUsersInfo
+            //var resolvedNameObj = selectedUsersInfo[0].DisplayText;
+            console.log('PackageListItemStyling. document.ready() picker.OnUserResolved function entered');
+
+            $('input[value="Save"][type="button"]').addClass('locked');
+
+            console.log('PackageListItemStyling. document.ready() picker.OnUserResolved resolvedNameObj= ', resolvedNameObj[0]);
+
+            //do we have a resolved name?
+            if(resolvedNameObj.length>0 && resolvedNameObj[0].IsResolved==true){
+                console.log('PackageListItemStyling. document.ready() picker.OnUserResolved -Determined that we have a resolved name with a key of:', resolvedNameObj[0].key);
+       
+                //now do our ajax call providing the key - this would occasionally fail with folks outside of unit
+
+                //now do our ajax call providing the key - this worked regardless
+                var lUser = getUserId(resolvedNameObj[0].Key);
+            }else {
+                nameResolved=false;
+                console.error('PackageListItemStyling.html:document.ready() people picker field resolution FAILED!');
+            }
+        }
+    });
+
+
+    //establish what year it is
+    var d = new Date();
+    Year = d.getFullYear();
+    console.log('PackageListItemStyling. document.ready() current Year:', Year);
+
+    $('[id^="Top"]').closest('tr').hide();
+    $('[id^="Status"]').closest('tr').hide();
+
+    //ensure error messages are cleared when value is changed
+    $('input[id^="Year"]').change(function(){
+        $(this).closest('span').find('.errorMessage').empty();
+    });
+
+    /* clear all errors when there is a change ? 
+    $('input').change(function(){
+        $('input[id^="Year"]').closest('span').find('.errorMessage').empty();
+    });
+    */
+    if(newFormTest) $('input[id^="Year"]').val(Year);
+
+    $('input[id^="Title"]').closest('tr').hide();
+    $('input[id^="Title"]').closest('table').append("<tr><td>Add Attachment(s)</td><td><input type='button' style='margin-left:0px;' onclick='javascript:UploadAttachment();' value='Add File'/></td></tr>");
+    
+   
+    //add our custom category drop down in the place of the original category input field
+    $('input[id^="Category"]').closest('td').append('<select id="Cat"></select>');
+    //hide(s) the original category input field
+    $('input[id^="Category"]').closest('td span:first-child').hide();
+    $('input[id^="Category"]').hide();
+
+    //Boards
+    var ajaxBoards = SPHGetListItems('Boards', '?$select=ID,DueToSC,FinalDueDate,BoardDate,Categories,Title', baseURL);
+    allPromises.push(ajaxBoards);
+    ajaxBoards.done(function(data){
+        console.log('PackageListItemStyling.html:documnet.ready() ajaxBoards done. Boards data:', data);
+        //loop through each elem of array
+        $.each(data, function(i,v){
+            //add each array item (v) to our list as a new Boards object
+            allBoards.push(new Boards(v.ID, v.Title, v.DueToSC, v.FinalDueDate, v.BoardDate, v.Categories));
+        });
+
+        console.log('PackageListItemStyling.html:documnet.ready() allBoards array:', allBoards);
+    }).fail(function(e){ 
+        alert('Failed Getting Board List Items! ' + e.responseText);
+        console.error('PackageListItemStyling.html:documnet.ready() ajaxBoards FAIL: ', e.responseText);
+    });
+ 
+//End Boards
+    
+/* #region Packages - load Packages AJAX */ //&$expand=AttachmentFiles
+var ajaxPackages = SPHGetListItems('Packages', '?$select=ID,AuthorId, TargetBoard/Id, TargetBoard/Title, Category,Title,MaskedID,Top,Nominee/Id,Nominee/Title,Org,Year,Status,Attachments,AttachmentFiles&$expand=AttachmentFiles,Nominee,TargetBoard', baseURL);
+    allPromises.push(ajaxPackages); 
+
+    ajaxPackages.done(function (data) {
+        console.log('PackageListItemStyling.html:documnet.ready() ajaxPackages done. Packages data:', data);
+      //add all items to our list
+      $.each(data, function (i, v) {
+        allPackages.push(new Packages(v.Id, v.Title, v.TargetBoard.Id, v.Category, v.Nominee.Id, v.Org, v.Status, v.AttachmentFiles.results, v.Top, v.Year, v.AuthorId, v.Nominee.Title, v.TargetBoard.Title, v.MaskedID));
+      });
+      console.log('PackageListItemStyling.html:documnet.ready() allPackages array:', allPackages);
+    }).fail(function (e) {
+        console.error('PackageListItemStyling.html:documnet.ready() ajaxPackages FAIL: ', e.responseText);
+      alert('Failed Getting Packages List Items! ' + e.responseText);
+    });
+    allPromises.push(ajaxPackages); //End Packages
+    /* #endregion */
+
+  //We get allPromises from Awards.js. It contains all the promises from our AJAX calls
+    //   we hook into it here and only execute when they are all done.
+    $.when.apply($,allPromises).done(function(d){
+        console.log('PackageListItemStyling.html:documnet.ready() allPromises done!');
+        //set our boardTitle to the selected text of our TargetBoard select dropdown object
+        boardTitle = $('select[id^="TargetBoard"]').find('option:selected').text()
+        console.log('PackageListItemStyling.html:documnet.ready() selected Board Title = ', boardTitle);
+
+        //Change our Cat dropDropDown Options to the Categories of our selected Option in TargetBoard
+        fillOutSelect( $('select[id^="TargetBoard"]'));  
+
+        //Hook into the TargetBoard select Dropdown change event
+        //     and changing the Cat drop down using the function fillOutSelect
+        $('select[id^="TargetBoard"]').change(function(e){fillOutSelect($(this));});
+        
+        //if(newFormTest){
+            $('#Cat').val(origCat);
+            $('#Cat option[value="'+origCat+'"]').prop('selected', 'selected');
+        //}
+        //Hook into the custom Category DropDownBox we created change event
+        //     allows us to update the Title field when the Category is changed
+        $('#Cat').change(function(e){
+            //Set the global Cat field to our selected Category Option text
+            Cat = $(this).find('option:selected').text();
+            //For the hidden input field we need to make sure we set its text to what the
+            //   Cat dropDownBox was selected as
+            $('input[id^="Category"]').val(Cat);
+
+            //Update our title with the new information
+            updateTitle();
+        });
+   
+    //Hook into our Org dropDownBox
+    //     grabs the result of the Org drop down box and updates our title with it
+    $('select[id^="Org"]').change(function(e){
+        //grab the result of the org drop down box text
+        Org = $(this).find('option:selected').text();
+        //update our title
+        updateTitle();
+    });
+    
+        //remove the loader/greyed out cover screen
+        document.getElementById("loaderforms").style.display = "none";
+        document.getElementById("greyOutforms").style.display = "none";
+    });
+
+ });
+ 
+
+
+function fillOutSelect(dropDownBox){
+    console.log('PackageListItemStyling.html:fillOutSelect() FUNCTION - the select sent to function =', dropDownBox);
+    ///get the text of the selected item from the dropDownBox
+    boardTitle = dropDownBox.find('option:selected').text();
+    console.log('PackageListItemStyling.html:fillOutSelect() select boardTitle = ', boardTitle);
+  
+   
+    //first remove all options from the dropDownBox so that we can
+    //    fill it with the new options
+    $("#Cat").empty()
+    console.log('PackageListItemStyling.html:fillOutSelect() select Emptied Cat field = ', $('#Cat'));
+
+    //clear out our closed years as we will be re-creating it for the new target board
+    allClosedYearsForTargetBoard = [];
+
+        //fill out the options with categories
+        // based on the matched board Categories array
+
+        //store result of filter that matches the boardTitle to
+        //    the board object that matches title
+            var targetBoard = allBoards.filter(function(v){
+                return v.Name==boardTitle;
+            });
+
+            console.log('PackageListItemStyling.html:fillOutSelect() get all boards that match targetBoard = ', targetBoard);
+            
+            //only proceed if we got the right board
+            if(targetBoard.length>0){
+                console.log('PackageListItemStyling.html:fillOutSelect() verified that we got a legitimate board by checking and length =', targetBoard.length);
+                //the first index should be what we got
+                //  so get all categories from it
+                $.each(targetBoard[0].Categories, function(i,v){
+                    console.log('PackageListItemStyling.html:fillOutSelect() appending Cat %o from %o Board', v, targetBoard[0]);
+                    $("#Cat").append(new Option(v, v));
+                    //If the first item, then set it as the selected option
+                    //   of the dropDownBox
+                    if(newFormTest){
+                        if(i==0){ //set the first cat
+                            $('input[id^="Category"]').val(v);
+                        }
+                    }
+                });
+            }
+
+            //get all packages for the target board
+            var allPackagesForThisBoard = allPackages.filter(function(pckg){
+                return pckg.TargetBoard == targetBoard[0].ID;
+            });
+
+            console.log('PackageListItemStyling.html:fillOutSelect() all Packages for the targetBoard =', allPackagesForThisBoard);
+
+            //determine what years are closed and store them
+            $.each(allPackagesForThisBoard, function(i,pckg){
+                 
+                    if(pckg.Status!="Open"){ //recently added pckg.Top==true to make sure a winner was chosen as well
+                        if(allClosedYearsForTargetBoard.indexOf(pckg.Year.toString())==-1) allClosedYearsForTargetBoard.push(pckg.Year.toString());
+                    }
+                 
+            });
+
+            console.log('PackageListItemStyling.html:fillOutSelect() all Years that are closed for targetBoard =', allClosedYearsForTargetBoard);
+            
+             if(newFormTest){
+            if(allClosedYearsForTargetBoard.indexOf(Year.toString())!=-1){
+                console.log('PackageListItemStyling.html:fillOutSelect() Determined that the currentYear is already closed for this board, so remove the text from the Year field');
+                //remove the current year as it is closed
+                $('input[id^="Year"]').val('');
+            }else{
+                $('input[id^="Year"]').val(Year.toString());
+            }
+             }
+            
+
+            //update tBoard title;
+            tBoard = boardTitle;
+            // update the title field
+            updateTitle();
+}
+
+function updateTitle(){
+    $('input[id^="Title"]').val($('input[id^="Year"]').val() + '_'+ tBoard+'_'+ Cat + '_'+ Org + '_' + Nom);
+ }
+ 
+ //Append an error message to a field
+ function WriteErrorMessage(inputElement, message){
+    var errorMessageMarkup = '<span class="errorMessage ms-formvalidation ms-csrformvalidation"><span role="alert">' + message + '<br></span>';
+    $(inputElement).parent().append(errorMessageMarkup);
+}
+function PreSaveAction() {
+     var canSave=false; 
+     
+      //Clear out existing error messages
+    $('.errorMessage').remove();
+    //attempt to fill out MaskID
+
+    //search for number of packages in the current year
+    var highestNumber = 0;
+    console.log('looping through all packages to test for total# packages', allPackages);
+    console.log('comparing year ', $('input[title^="Year"]').val());
+    console.log('comparing targetboard = ', $('select[title^="Target Board"] option:selected').val());
+    var tPckg = allPackages.filter(function(i){
+        if(i.Year == $('input[title^="Year"]').val() && i.TargetBoard == $('select[title^="Target Board"] option:selected').val()){
+            
+            if(i.MaskedID!=null){
+                console.log('MaskedID is valid, so check it ', parseInt(i.MaskedID.split('-')[1]));
+                if(parseInt(i.MaskedID.split('-')[1]) > highestNumber) highestNumber = parseInt(i.MaskedID.split('-')[1]);
+            }else console.log('target package found, but MaskedID == null');
+        }
+        return i.Year == $('input[title^="Year"]').val() && i.TargetBoard == $('select[title^="Target Board"] option:selected').val();
+    });
+    console.log('highestNumber determined so next num = ', (highestNumber+1));
+    //only create MaskedID on new form!
+    if(newFormTest){
+        $('input[title^="MaskedID"]').val('N-' + (highestNumber+1));//tPckg.length
+    }
+    try {
+        console.log("$(input[id^=Year]).val = ", allClosedYearsForTargetBoard); //2020
+        console.log($('input[id^="Year"]').val().toString());
+        console.log('Year field val = '+ allClosedYearsForTargetBoard.indexOf($('input[id^="Year"]').val())); //0
+        //check for a year that cannot be saved for current board
+        
+        if(allClosedYearsForTargetBoard.indexOf($('input[id^="Year"]').val())!=-1){
+            if(newFormTest){
+            console.error('Note - the Board ' + $('select[id^="TargetBoard"]').find('option:selected').text() + ' has already been closed and no additional packages for Year ' + $('input[id^="Year"]').val() + ' are being accepted');
+            
+            //display error message
+            WriteErrorMessage($('input[id^="Year"]'), 'The Board (' + $('select[id^="TargetBoard"]').find('option:selected').text() + ') has already been closed and no additional packages for Year (' + $('input[id^="Year"]').val() + ') are being accepted. You must choose a different Year.');
+
+            canSave=false;
+            }else {
+                alert('Preventing save due to board already closed.'+' Note - the Board ' + $('select[id^="TargetBoard"]').find('option:selected').text() + ' has already been closed and no additional packages for Year ' + $('input[id^="Year"]').val() + ' are being accepted');
+                console.log('Preventing save due to board already closed'+'Note - the Board ' + $('select[id^="TargetBoard"]').find('option:selected').text() + ' has already been closed and no additional packages for Year ' + $('input[id^="Year"]').val() + ' are being accepted');
+                canSave =false; //<--- I suspect this allows edits after aboard is closed
+            }
+        }else{
+            canSave=true
+
+        NomObj = JSON.parse($('input[id^="Nominee"]').val());
+        console.log(NomObj[0].DisplayText);
+        //the JSON obj created has a DisplayText variable ex: Bechard, William J. MSgt USAF NASIC.....
+        //  so we split it based on the spaces into an array
+        //  and use only the indexes that we want
+        var dispName = NomObj[0].DisplayText.split(' ');
+        //  Example Bechard, William J. MSgt USAF NASIC.....
+        //  becomes: Bechard, William J. MSgt
+        Nom = dispName[0] + ' ' + dispName[1] + ' ' + dispName[2] + ' '+ dispName[3]; // + ' ' + dispName[4]
+   
+        Org = $('select[id^="Org"]').find('option:selected').text();
+        Cat = $('select[id^="Cat"]').find('option:selected').text();
+        tBoard = $('select[id^="TargetBoard"]').find('option:selected').text();
+        updateTitle();
+        }
+
+        if(canSave){
+            //check for Nominee already submitted package for target board/year
+            if(nameResolved){
+                //only do this if in newForm.aspx
+         
+                if(newFormTest){
+                    console.log('PackageListItemStyling.html PreSaveAction: determined that we are in newform.aspx');
+                    console.log('resolved Name ID = ', resolvedNameID);
+                    //check to see if name (for Board Member) is already assigned to the board
+                    var allNomineePackages = allPackages.filter(function(pckg){
+                        return pckg.Nominee==resolvedNameID && pckg.Year == $('input[id^="Year"]').val() && pckg.TargetBoard == $('select[id^="TargetBoard"]').val();
+                    });
+
+                    console.log('Determined that the Nominee has the following packages matching them as Nominee and the selected Year/Board', allNomineePackages);
+
+                    if(allNomineePackages.length>0){
+                        //display error message
+                        WriteErrorMessage($('div[title^="Nominee"]'), 'The Board (' + $('select[id^="TargetBoard"]').find('option:selected').text() + ') and target Year (' + $('input[id^="Year"]').val() + ') already has a package submitted for this Nominee.');
+
+                        console.error('Determined Nominee all has a package for target Board and target Year');
+                        canSave=false;
+                    }else{
+
+                        console.log('allNomineePackages length <=0');
+                        canSave=true; 
+
+                        //check for uploaded file
+                        var myAttachments = document.getElementById("idAttachmentsTable");  
+                        if (myAttachments == null || myAttachments.rows.length == 0) {  
+                            document.getElementById("idAttachmentsRow").style.display = 'none';  
+                            alert("Attachments are mandatory for this list. Please attach the appropriate files");  
+                            canSave=false;  
+                        }
+                    } 
+                }else{
+                    console.log('PackageListItemStyling.html PreSaveAction: determined that we are in editform.aspx');
+                }
+            }else{
+                //display error message
+                WriteErrorMessage($('div[title^="Nominee"]'), 'Could not resolve Nominee name! Cannot save.');
+
+                console.error('nameResolved ==false, so cannot check if Nominee already has a package for this board/year');
+                canSave=false;
+                //write error letting user know
+            }
+        }
+
+    } catch (e) {
+        // handle error
+    }
+
+    if(canSave) return true;
+    else return false;
+  }
+ 
+</script><html xmlns:mso="urn:schemas-microsoft-com:office:office" xmlns:msdt="uuid:C2F41010-65B3-11d1-A29F-00AA00C14882"><head>
+<!--[if gte mso 9]><xml>
+<mso:CustomDocumentProperties>
+<mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Editor msdt:dt="string">BECHARD, WILLIAM J MSgt USAF HAF NASIC/SCP</mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Editor>
+<mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Author msdt:dt="string">BECHARD, WILLIAM J MSgt USAF HAF NASIC/SCP</mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Author>
+<mso:Order msdt:dt="string">500.000000000000</mso:Order>
+</mso:CustomDocumentProperties>
+</xml><![endif]-->
+</head>

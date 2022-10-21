@@ -1,0 +1,173 @@
+<link rel="stylesheet" type="text/css" href="/teams/23840/SiteAssets/Scripts/jquery.dataTables.min.css">
+<style>
+    #boardsDataTable{
+        margin:5px;
+    }
+    
+    #boardsDataTable caption{
+        font-size: x-large;
+        font-weight: bold;
+    }
+
+    #newBoardButton{
+        float:right;
+    }
+    
+    .showPointer{
+        cursor: pointer;
+    }
+
+    </style>
+    <!--div style="text-align: center;">
+        
+    </div-->
+    <span id="noIE">WARNING: Get Attach Btn does not work in IE. Please use Edge or Chrome</span>
+        <table id="boardsDataTable" class="display" cellspacing="0" width="100%">    
+            <caption>All Boards <input id="newBoardButton" type="button" class="adminOnly" value="Add Board"></caption> 
+            <thead>    
+                <tr> 
+                    <th>Title</th></th>
+                    <th>Due To BESPIN</th>       
+                    <th>Final Due Date</th>
+                    <th>Board Date</th>
+                    <th>Attachments</th>
+                    <th></th>
+                </tr>    
+            </thead>       
+        </table>  
+ 
+<script type="text/javascript">
+ // #region JS scripts Loading
+ /*
+ var callback = function(){ 
+
+    //SP.SOD.loadMultiple(['jquery.js','DataTables.js', 'Awards.js'], setupAllBoardsDisplay);
+    
+};
+if (
+    document.readyState === "complete" ||
+    (document.readyState !== "loading" && !document.documentElement.doScroll)
+) {
+  //callback();
+} else {
+  //document.addEventListener("DOMContentLoaded", callback);
+}*/
+// #endregion
+ 
+ 
+function setupAllBoardsDisplay(){
+    console.error('setupAllBoardsDisplay');
+    //We get allPromises from Awards.js. It contains all the promises from our AJAX calls
+    //   we hook into it here and only execute when they are all done.
+    //$.when.apply($,allPromises).done(function(d){
+        try { 
+            $('#boardsDataTable').DataTable({    
+                "bAutoWidth": false, //we want to control the width of our columns specifically, if we were ok with a standardard width we could set this to true
+                "aaData": allBoards,  //this is the ajax data that we are passing in
+                "aoColumns": [   //we use this to hook into each column based on its mData string to place the info from the data (ajax sp list) into the correct column
+                    {    
+                        "mData": "Name", //this needs to be the internal SP column/field name
+                        "sWidth": '80px'  // we speciy the width
+                    },
+                    {    
+                        "mData": "SCDue", //this needs to be the internal SP column/field name
+                        "sWidth": '80px',  // we speciy the width
+                        'render': function(data, type, row){ //rather than render the data, we want to manipulate it first, we do so in this function
+                            if(typeof(data) !='undefined') return monthFriendlyName(data.split('T')[0].split('-')[1]) + ' ' + data.split('T')[0].split('-')[2]; //so here we just use moment.js to turn the date into a nice format
+                            else return '<span></span>';
+                        }
+                    },        
+                    {    
+                        "mData": "FinalDue", //this needs to be the internal SP column/field name
+                        "sWidth": '80px',  // we speciy the width
+                        'render': function(data, type, row){ //rather than render the data, we want to manipulate it first, we do so in this function
+                            if(typeof(data) !='undefined') return monthFriendlyName(data.split('T')[0].split('-')[1]) + ' ' + data.split('T')[0].split('-')[2]; //so here we just use moment.js to turn the date into a nice format
+                            else return '<span></span>';
+                        }
+                    },        
+                    {    
+                        "mData": "BoardDate", //this needs to be the internal SP column/field name
+                        "sWidth": '80px',  // we speciy the width
+                        'render': function(data, type, row){ //rather than render the data, we want to manipulate it first, we do so in this function
+                            if(typeof(data) !='undefined') return monthFriendlyName(data.split('T')[0].split('-')[1]) + ' ' + data.split('T')[0].split('-')[2]; //so here we just use moment.js to turn the date into a nice format
+                            else return '<span></span>';
+                        }
+                    },
+                    {
+                        "mData": "ID", //this needs to be the internal SP column/field name
+                        "sWidth": '80px',  // we speciy the width
+                        'render': function(data, type, row){ //rather than render the data, we want to manipulate it first, we do so in this function
+                            //does the board have any attachments?
+                            console.log('row ', row.Attachments);
+                            var filesButton ='';
+                            if(row.Attachments.length==0){
+                                filesButton ='<div style="text-align:center">None</div>';
+                            }else filesButton ='<div style="text-align:center"><input class="attach attachButton" type="button" value="Get" onclick="getAttachments(this, '+false+')"></div>';
+
+                            return filesButton; //so here we just use moment.js to turn the date into a nice format
+                        }
+                    },
+                    {
+                        "mData": "ID", //this needs to be the internal SP column/field name
+                        "sWidth": '40px',  // we speciy the width
+                        'render': function(data, type, row){ //rather than render the data, we want to manipulate it first, we do so in this function
+                            return '<span></span>'; //so here we just use moment.js to turn the date into a nice format
+                        }
+                    }],
+                    createdRow: function(row, data, dataIndex) { //this is basically a for:each of each row
+               
+                    // We are adding the data-id (the SP ID) to the row  as its id property
+                    $(row).prop('id', 'boardItem_'+  data.ID);
+                    //then at the end of the row we add a button and again use the data.ID (SP ID) as a parameter for the click function
+                    $(row).find('td:last-child').append('<input type="button" style="float:right;" class="adminOnly editBoardButton showPointer" value="Edit"></button>');
+               
+                    //we do this so that we can open up a modal of the SP Item when we click on it (since we have and are passing its ID)
+                    }
+            });
+        
+            $('#boardsDataTable').find('tbody').find('tr').on('click', function(e){
+                viewBoard($(this).attr('id').split('_')[1]);
+            });
+
+            $('#boardsDataTable').find('tbody').find('tr').addClass('showPointer');
+
+            $('.attachButton').on('click', function(e){
+                e.stopPropagation();
+            })
+            $('.editBoardButton').on('click', function(e){
+                e.stopPropagation();
+                editBoard($(this));
+            })
+            $('#newBoardButton').on('click', function(){   
+                openModal(baseURL +  '/Lists/Boards/NewForm.aspx', 'New Board', 600, 600);
+            });
+            if(typeof isAdmin!=='undefined'){
+            console.log('!!! Admin Only')
+            //detected that someone in the special group is logged in
+            //getStyle('.adminOnly',sSheet).display='';
+            console.log('discovered all adminOnly objects = ', $('.adminOnly'));
+            $('.adminOnly').show();
+      }else  $('.adminOnly').hide();
+        }catch(e){
+            alert(e);
+        }
+    //});
+}
+
+function editBoard(e){
+  openModal(baseURL +'/Lists/Boards/EditForm.aspx?ID=' + $(e).closest('tr').attr('id').split('_')[1], 'Edit Board', 700, 800);
+}
+
+function viewBoard(id){
+  openModal(baseURL + '/Lists/Boards/DispForm.aspx?ID=' + id, 'View Board', 600, 800);
+}
+
+</script><html xmlns:mso="urn:schemas-microsoft-com:office:office" xmlns:msdt="uuid:C2F41010-65B3-11d1-A29F-00AA00C14882"><head>
+<!--[if gte mso 9]><xml>
+<mso:CustomDocumentProperties>
+<mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Editor msdt:dt="string">BECHARD, WILLIAM J MSgt USAF HAF NASIC/SCP</mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Editor>
+<mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Author msdt:dt="string">BECHARD, WILLIAM J MSgt USAF HAF NASIC/SCP</mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Author>
+<mso:Order msdt:dt="string">1600.00000000000</mso:Order>
+</mso:CustomDocumentProperties>
+</xml><![endif]-->
+</head>

@@ -1,0 +1,1366 @@
+<link rel="stylesheet" href="/teams/23840/SiteAssets/Scripts/jquery-ui.min.css"/>
+<link rel="stylesheet" href="/teams/23840/SiteAssets/Scripts/font-awesome-4.7.0/css/font-awesome.min.css">
+
+<div class="accordion" id="t_CategoryItem">
+    <h3><div class="boardMbrCat">Board Members: <span class="bOrg">{bCAT}</span></div> {Cat} - Category <div class='right' style="margin-right:40px;">{NumberOfPackages}</div></h3>
+    <div class="panel"><!--SNCO Panel-->
+      <div class='box pckgHeader'><!--SNCO Packages BOX-->
+      <h3 class='headerMod'>
+        <table id='packagesTable'>
+          <tbody>
+            <tr>
+              <td><div class='main'>  
+                <div class='leftSpot'>.</div>
+                <div id='packagesTitle' class='centerSpot'>Packages</div>
+                <div class='rightSpot adminOnly'><i class="lockICON fa fa-lock fa-2x"></i><select class='right adminOnly lock starSelect' onclick="event.stopPropagation();"><option value=0>Top Package #</option></select></div>
+              </td>
+            </tr>
+          </tbody>
+        </table> 
+        <table id='packagesHeader'>
+          <tbody>
+            <tr>
+              <td>Year</td><td>Unit</td><td>Nominee</td><td>Attachment</td><td>Total Ranking</td><td class="topPackage">Top</td>
+            </tr>
+          </tbody>
+        </table>  
+      </h3>
+      <div id="t_PackageItem" class="accordion"><!--start of a package item?-->
+          <h3 class="item" id='package_{pID}'>
+            <table id="templatePackage">
+              <tbody>
+                <tr id='TRPackage_{rowID}'>
+                  <td><input type="button" value="Edit" class="adminOnly adminEditPckg" value="Edit" style="transform:translateX(-90px);"><div style="display:inline-block; transform:translateX(-7px);">{Year}</div></td><td>{Unit}</td><td>{Nominee}</td><td>{Attach}</td><td><span class="adminOnly">{totalRanking}</span></td><td><i style="transform:translateX(9px);" class="{Top}"></i></td>
+                </tr>
+              </tbody>
+            </table>
+          </h3>
+          <div class='panel adminOnly'><!--Packages Panel -->
+            <div class='box'><!--t_RankingItem box-->
+              <h3 class='headerMod'>Rankings</h3>
+              <div><!--Rankings Panel-->
+                <div class='rankingHeader'>
+                  <table>
+                    <tbody>
+                      <tr style="color:white!important; font-weight:bold;">
+                        <td>Board Member Name</td><td>Score</td><td>Ranking</td><td>Notes</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class='ranking' id="t_RankingItem"><!--Ranking Item-->
+                  <table>
+                    <tbody>
+                      <tr SPID="{RankingID}">
+                        <td>{BoardMember}</td><td>{Score}</td><td>{Ranking}</td><td><input type="button" value="Notes" onclick="revealNotes(this)">
+                          <div class="hiddenNotesModal" title="Notes" id="{RankingID}">
+                            <br>
+                            <div style="color:blue; margin-bottom:2px;">Package Improvement Notes: (FORMAT- bullet 1: XX is a weak action verb, replace with...)</div>
+                            <textarea style="width:100%; height:90%"></textarea>
+                            </div>
+                          </div>
+                         </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                <!--Rankings Item end--></div>
+              <!--Rankings Panel end--></div>
+            <!--Rankings box End--></div> 
+          <!--Package Panel End? --></div>
+        <!--Packages Item End? --></div>
+      <!--SNCO Packages BOX End--></div>
+    <!--SNCO Panel End--></div>
+    </div>
+    <div class="adminOnly" id="noIE">WARNING: Get Attach Btn does not work in IE. Please use Edge or Chrome</div>
+  <div class="main"> 
+  <div id='adminHeader'>
+    <span class='noDelete'>
+        <div id="boardChoiceLabel">Select a Board</div>
+        <select id='boardChoice' name="boardChoice"><option value='0'>...</option></select>
+        <div class="adminOnly" style="width:120px;display:inline-block;"><input type='button' id="closeOutBoard" class="locked" value="Lock Board" title="This will ensure that no new packages can be created for this Board (year)"></div>
+        <span><select class='right' id="yearSelect" onclick="event.stopPropagation();"><option value=0><- select Board FIRST</option></select></span>  
+        <span style="float:right; margin-right:80px;" class="adminOnly"><a href="/sites/20127/grps/sc/Awards/Shared%20Documents/Awards%20(Admin)%20Guide.pdf" target="_blank"><i class="fa fa-question-circle fa-3x helpIcon adminOnly" aria-hidden="true"></i></a></span>
+    </span>
+    <div id='catField'>
+    </div>
+  </div>
+  <div id="adminBoardMembers" class="awardManagers">
+    <h3>Board Members</h3>
+    <div class="box" id="boardMembersBox">
+      <table id="memberTable">
+        <thead>
+          <th></th>
+          <th>Name</th>
+          <th>Org</th>
+          <th><i style="" class="fa fa-check"></i></th>
+          <th>Target Categories</th>
+        </thead>
+        <tbody>
+          <tr id="templateJudge">
+            <td judgeid="{judgeid}">{Pic}</td>
+            <td class="noOverflow" title="{TitleToolTip}">{Title}</td>
+            <td class="noOverflow" title="{OrgToolTip}">{Org}</td>
+            <td class="noOverflow" title="Rankings Complete For All Categories Registered.">{!}</td>
+            <td class="noOverflow" title="{CatToolTip}">{Cat}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <br>
+    <span></span>
+   <input type='button' class="locked adminOnly" id="closeOutMembers" value="Close Out Board Members" title="This will remove the Board Members for this Board/Year and ensure that no more Ranking can take place.">
+  </div>
+  </div>
+ 
+  <link href="/sites/20127/grps/sc/quality_assurance/SiteAssets/fonts/all.css" rel="stylesheet"> <!--load all styles -->
+<script>
+var sSheet;
+var ruleToChange;
+// #region JS scripts Loading
+/*
+var callback = function(){ 
+    LoadSodByKey("Awards.js", scriptReady);
+};
+if (
+    document.readyState === "complete" ||
+    (document.readyState !== "loading" && !document.documentElement.doScroll)
+) {
+  callback();
+} else {
+  document.addEventListener("DOMContentLoaded", callback);
+}*/
+// #endregion
+
+function scriptReadyADMIN(){
+    //atempt to make webparts 9 and 10 expandable
+    $("#WebPartWPQ9_ChromeTitle, #WebPartWPQ10_ChromeTitle").find('h2').append('<i style="float:right;" class="fa fa-angle-right"></i>');
+    $("#WebPartWPQ9_ChromeTitle, #WebPartWPQ10_ChromeTitle").click(function()
+    {
+
+          console.log('expandIMG ', ($(this).next('[id^="WebPartWPQ"]').css('display')));
+          var state = $(this).next('[id^="WebPartWPQ"]').css('display');
+          //none = webPart is already collapsed
+          //block = webPart is open
+
+          $(this).next('[id^="WebPartWPQ"]').slideToggle(400);
+ 
+        //Replace Expand-Collapse Image  
+       
+        if (state === 'block' )
+        {
+            $(this).find('i').remove();
+            $(this).find('h2').append('<i style="float:right;" class="fa fa-angle-right"></i>');
+        }
+    
+        if ( state === 'none' )
+        {
+            $(this).find('i').remove();
+            $(this).find('h2').append('<i style="float:right;" class="fa fa-angle-down"></i>');
+        } 
+    });
+
+
+ 
+
+    console.log('AwardsAdminModular.html:scriptReady(). FUNCTION - entry point for Awards Admin Modular');
+     //We get allPromises from Awards.js. It contains all the promises from our AJAX calls
+    //   we hook into it here and only execute when they are all done.
+    //$.when.apply($,allPromises).done(function(d){
+        console.log('AwardsAdminModular.html:scriptReady(). Attempt to create the Admin Accordion');
+
+        if(typeof awardManagers !=='undefined' || typeof isAdmin !=='undefined'){
+        
+          $('.awardManagers').show();
+        //also
+        }else console.log('note: awardManager == undefined');
+        //this actually closes out the Packages, but will make most sense to say close out board
+        //    as it will effectively stop any new packages for that board / year
+        $('#closeOutBoard').on('click', function(e){
+          var confirmClose = confirm('Warning: This will set the STATUS of all Packages for the ' + $('#boardChoice').find('option:selected').text() + " Board to Closed. This will mean no more packages can be submitted for the year "+ $('#yearSelect').val() +". Ok to continue, or click Cancel to return.")
+            if(confirmClose==true){
+                var allUpdates = [];
+                console.log('board choic val = ' + $('#boardChoice').val());
+                //get all packages that target board and year
+                var tPackages= allPackages.filter(function(pckg){
+                  return pckg.TargetBoard ==$('#boardChoice').find('option:selected').val() && pckg.Year == $('#yearSelect').find('option:selected').val();
+                });
+
+                $.each(tPackages, function(i,v){
+                  console.log('AwardsAdminModular.html:closeOutBoard Click Event. Identified the following packages to set Status=Closed ', tPackages);
+
+                //only update the top property
+                var itemProperties={'Status':'Closed'};
+
+                var ajaxUpdatePackage = SPHUpdateItemByID('Packages', v.ID, itemProperties, baseURL, SPHGetItemType('Packages'));
+                    allUpdates.push(ajaxUpdatePackage);
+                    ajaxUpdatePackage.done(function(data){
+                       console.log('AwardsAdminModular.html:closeOutBoard Click Event. Package item updated ', data); 
+                    }).fail(function(e){ 
+                      console.error('AwardsAdminModular.html:closeOutBoard Click Event. Failed to update package item' + e.responseText);
+                      alert('Failed Updating Package by ID! ' + e.responseText);
+                    });
+
+                });
+
+                $.when.apply($,allUpdates).done(function(promiseResolution){
+                    //all promises resolved
+                    location.reload();
+                });
+            }
+        });
+
+        $('#closeOutMembers').on('click', function(e){
+        // I need to fix mulitiple updates here
+            var confirmClose = confirm('Warning: This will set the STATUS of all Board Members registered to the ' + $('#boardChoice').find('option:selected').text() + " Board to Closed. This will mean they can no longer Rank any of that Board's Packages. Ok to continue, or click Cancel to return.")
+            if(confirmClose==true){
+                var allUpdates = [];
+                //set status of selected board members
+                //console.log('membertable ', $('#memberTable'));
+                //console.log('mbr table tr ', $('#memberTable').find('tr'));
+                $.each($('#memberTable').find('tr[id^="JudgeListItem"]'), function(i,v){
+           
+                judgeListItemID = $(v).attr('id').split('_')[1];
+
+                //only update the top property
+                var itemProperties={'Status':'Closed'};
+
+                var ajaxUpdateJudge = SPHUpdateItemByID('Judges', judgeListItemID, itemProperties, baseURL, SPHGetItemType('Judges'));
+                    allUpdates.push(ajaxUpdateJudge);
+                    ajaxUpdateJudge.done(function(data){
+                       console.log('AwardsAdminModular.html:scriptReady(). Judge item updated ', data); 
+                    }).fail(function(e){ alert('Failed Updating Judge by ID! ' + e.responseText);});
+
+                });
+
+                $.when.apply($,allUpdates).done(function(promiseResolution){
+                    //all promises resolved
+                    location.reload();
+                });
+            }
+        });
+        sSheet = getStyleSheet('AwardsModular.css');
+
+        $('#mainCover').show();
+        CreateAdminAccordion();
+       
+
+    //});
+}
+
+ 
+
+function addHTMLTemplate(template, target, Properties){
+ //console.log('addHTMLTemplate(template %o, target %o, Properties %o)', template, target, Properties);
+  //get and copy the ranking template
+ var templateItem = template.clone(true);
+
+  //remove id 
+  templateItem.removeAttr('id');
+  
+  //console.log(templateItem.html());
+
+  //change properties
+  for(var prop in Properties){
+    templateItem.html(templateItem.html().replace(prop, Properties[prop]));
+  }
+
+  //add item to Rankings
+  target.append(templateItem);
+  return templateItem;
+}
+ 
+
+function PackagesAdjust(){
+
+}
+
+var accordion;
+
+function fillOutWithYear(targetBoard, tYear){
+  console.log('AwardsAdminModular.html:fillOutWithYear(). FUNCTION - determines for targetBoard ' + targetBoard + ' the number of years that is = Judges who signed up for that year.')
+  
+  var allYears = []; //array to store all of our years
+  //filter our Packages to add to allYears whose package TargetBoard == the passed targetBoard ID
+  allPackages.filter(function(pckg){
+    if(allYears.indexOf(pckg.Year)==-1){
+        if(pckg.TargetBoard ==targetBoard.ID){
+            //add year
+            if(allYears.indexOf(pckg.Year)<0) allYears.push(pckg.Year);
+        }
+    }
+    return pckg.TargetBoard ==targetBoard.ID;
+  });
+  console.log('Determined all Years = ', allYears);
+  allJudges.filter(function(judge){
+    if(allYears.indexOf(parseInt(judge.Year))==-1){
+        console.log('determined that judge.Year %o in allYears.indexOf(%o)=%o', parseInt(judge.Year), allYears, allYears.indexOf(parseInt(judge.Year)));
+        if(judge.TargetBoard==targetBoard.ID){
+            //add year
+            if(allYears.indexOf(judge.Year)<0) allYears.push(parseInt(judge.Year));
+        }
+    }
+    return judge.TargetBoard ==targetBoard.ID;
+  });
+
+  console.log('AwardsAdminModular.html:CreateAdminAccordion(). Determined that there are ' + allYears + ' for the targetBoard ' + targetBoard);
+
+     //fill out year(s)
+     $('#yearSelect').empty();
+
+    //--loop find all available years
+    allYears.sort().map(function(y, i){
+      $('#yearSelect').append(new Option(y, y));
+    });
+
+    //as long as the years have been identified then select it
+    if(allYears.length>0) {
+      $('#yearSelect').val(allYears[0]);
+      $('#closeOutMembers').removeClass('locked');
+      $('#closeOutBoard').removeClass('locked');
+      fillOutAccordion(targetBoard, $('#yearSelect').val());
+    }
+    else {
+      $('#yearSelect').append(new Option('There are no packages (Year) for this board...', 0));
+      //erase accordion
+      $('#catField').empty();
+      //and board members
+       //empty member table
+      $('#memberTable').find('tbody').children('tr:not([id="templateJudge"])').empty();
+      $('#closeOutMembers').addClass('locked');
+      $('#closeOutBoard').addClass('locked');
+    }
+}
+
+function countValues(array, countItem){
+  var count=0;
+  $.each(array, function(i,v){
+    if(v==countItem) count++;
+  });
+  return count;
+}
+
+function fillOutAccordion(targetBoard, year){
+  console.log('AwardsAdminModular.html:fillOutAccordion(). FUNCTION filling out Accordion with targetBoard = ' + targetBoard + ' year = ' + year);
+  var pckgCategory ={};
+  var uniqueCat = [];
+ //discover board members that are signed up for this board
+ //    and whose status is still open
+ var bJudges = allJudges.filter(function(judge){
+    return judge.Status=='Open' && judge.TargetBoard==targetBoard.ID && judge.Year==year;
+ });
+
+ if(bJudges.length>0){
+    $('#closeOutMembers').removeClass('locked');
+ }else{
+    $('#closeOutMembers').addClass('locked');
+ }
+
+ console.log('AwardsAdminModular.html:fillOutAccordion(). Judges that are still in Status=Open for this Board/Year =  ',  bJudges);
+
+ //empty member table
+ $('#memberTable').find('tbody').children('tr:not([id="templateJudge"])').empty();
+
+//for id judge/cat
+var judgeCat={};
+var judgeRanking={};
+/*
+targetBoard.Categories.map(function(category){
+  var _TP = allPackages.filter(function(pckg){
+      return pckg.TargetBoard ==targetBoard.ID && pckg.Year == year;
+    }).filter(function(pckg){
+      return pckg.Cat == category;
+    });
+    
+    if(_TP.length >0) pckgCategory[_TP[0].Cat] = _TP.length;  
+});*/
+//targetBoard.Categories.map(function(category){
+  var _TP = allPackages.filter(function(pckg){
+    if( pckg.TargetBoard ==targetBoard.ID && pckg.Year == year){
+      if(uniqueCat.indexOf(pckg.Cat)<0){
+        uniqueCat.push(pckg.Cat);
+        pckgCategory[pckg.Cat] =1;
+      } 
+      else{
+        pckgCategory[pckg.Cat] +=1;
+      }
+      return true;
+    }
+  });
+
+    
+
+//});
+
+console.log('board pckg info = ', pckgCategory);
+
+ //now fill out judges board
+ $.each(bJudges.sort(function(a,b){return a.Org > b.Org ? 1: -1;}),function(i,judge){
+    var jCat = judge.Cat;
+    var jOrg = judge.Info.Title.split(' ')[judge.Info.Title.split(' ').length-1];
+    if(jCat ==null) jCat = 'All';
+
+    //find out if there is a ranking from this judge for a package in this category
+    var judgeDone = allRankings.filter(function(r){
+      //alert('j       --   ' +  judge.Info.Id + '  r  ' + r.Judge.Id + '   s ' + judge.Status);
+      return judge.Info.Id==r.Judge.Id && judge.Status!='Closed';
+    });
+
+    console.log('all valid rankings for judge '+ judge.Info.Id + ' rankings = ');
+    console.log(judgeDone);
+
+
+    judgeRanking[judge.Info.Id] = [];
+
+    $.each(judgeDone, function(i,v){
+      
+      //if(judge.Info.Id==r.Judge.Id && judge.Status!='Closed'){
+      //  if(!judgeRanking.hasOwnProperty(judge.Info.Id)) judgeRanking[judge.Info.Id] = []
+      //  judgeRanking[judge.Info.Id].push(r.Cat);
+      //}
+      allPackages.filter(function(pckg){
+
+      
+
+        //has judge ranked all packages in category for the target board/year
+        if(v.TargetPackage==pckg.ID && pckg.TargetBoard == targetBoard.ID && pckg.Year == judge.Year){
+          judgeRanking[judge.Info.Id].push(pckg.Cat);
+        }
+        //pckg.TargetBoard==targetBoard.ID && pckg.Year==Year && 
+        return v.TargetPackage==pckg.ID;
+      });
+    
+    });
+
+    //Piece together judge name based on the judge info object
+    var judgeName = judge.Info.Title.split(' ')[0] + ' ' +judge.Info.Title.split(' ')[1] +' ' + judge.Info.Title.split(' ')[2] + ' ' + judge.Info.Title.split(' ')[3];
+
+    // use addHTMLTemplate functin to grab template and append to HTML
+    var judgeListItem = addHTMLTemplate($('#templateJudge'), $($('#memberTable').find('tbody')[0]), {
+    '{Pic}':'<img class="UserImage" src="/_layouts/15/userphoto.aspx?size=S&username=' + judge.Info.UserName +'"/>', 
+    '{Title}':judgeName, 
+    '{Org}':judge.Org, 
+    '{Cat}':jCat,
+    '{CatToolTip}':jCat, 
+    '{OrgToolTip}':judge.Info.Title.split(' ')[judge.Info.Title.split(' ').length-1], 
+    '{TitleToolTip}':judgeName,
+    '{judgeid}':judge.Info.Id
+    });
+
+    $(judgeListItem).attr('id', 'JudgeListItem_' + judge.ID); //add the Judge item ID to the row
+
+    console.log('jRRR = ', judgeRanking[judge.Info.Id]);
+
+    var canCheck=true;
+
+    //need to convert jCat All to jCat every cat possible for the board
+    if(jCat=='All'){
+      jCat = targetBoard.Categories.join('\n');
+    }
+
+
+    //loop through all categories that this judge is registered for
+    $.each(jCat.split('\n'), function(i,v){
+      //for this cat, has the judge ranked all packages available?
+      console.log('count ' + v +  " for " + judge.Info.Id + ' = ' + pckgCategory[v])
+      //compare if there is any packages in the cat
+      if(pckgCategory.hasOwnProperty(v)){
+        if(countValues(judgeRanking[judge.Info.Id], v) == pckgCategory[v]){
+          console.log('all packages graded for cat ' + v + ' for the judge ' + judge.Info.Id);
+        }else canCheck=false;
+      }
+
+      if(!judgeCat.hasOwnProperty(v)) judgeCat[v] = []
+      judgeCat[v].push(judge.Org);
+    });
+    console.log('j list item ', judgeListItem);
+    if(canCheck){
+      judgeListItem.html(judgeListItem.html().replace('{!}','<i style="" class="fa fa-check"></i>'));
+    }else{
+      judgeListItem.html(judgeListItem.html().replace('{!}',' '));
+    }
+ });
+ 
+ console.log('judgeRanking ', judgeRanking);
+ console.log('judgeCat = ', judgeCat);
+
+ $('#memberTable').find('[id^="JudgeListItem_"]').on('click', function(){
+    ruleToChange = getStyle('.ms-dlgTitle',sSheet);
+    ruleToChange.backgroundColor='darkgrey';
+    jListItemID = $(this).attr('id').split('_')[1];
+    console.log('AwardsAdminModular.html:fillOutAccordion(). Judge List Item on Click activated. Determined Judge List Item id = ', jListItemID); 
+     openModal(baseURL + '/Lists/Judges/EditForm.aspx?Id=' + jListItemID, 'Edit Board Member Form', 700, 500); 
+ })
+
+ $('#memberTable').find('[id^="JudgeListItem_"]').addClass('showPointer'); //Row HOVER effect
+
+ $('#memberTable').find('[id^="JudgeListItem_"]').hover(function () {
+  //in
+  $(this).addClass('hover');
+}, function () {
+  //out
+  $(this).removeClass('hover');
+});
+
+  //destroy accordion (to recreate it) if it already exists
+  if(accordion!=null){
+    //destroy accordion
+    $(".accordion").accordion("destroy");
+  }
+
+  //empty all children
+  $('#catField').empty();
+
+  var allCategories = [];
+  var allPkgs = [];
+  var targetPackages;
+  
+ //filter through all Packages adn return only when targetBoard == our targetBoard ID and = Year
+  targetPackages = allPackages.filter(function(pckg){
+    return pckg.TargetBoard ==targetBoard.ID && pckg.Year == year;
+  });
+
+  //if any packages
+  if(targetPackages.length>0){
+    //check package for board lock
+    if(targetPackages[0].Status=='Closed')  $('#closeOutBoard').addClass('locked');
+    else  $('#closeOutBoard').removeClass('locked');
+  }
+
+  console.log('AwardsAdminModular.html:fillOutAccordion(). targetPackages for this Accordion = ', targetPackages);
+ 
+  //loop through all categories in the target board
+  uniqueCat.map(function(category){
+    //include packages that match this category
+    var tPackage = targetPackages.filter(function(pckg){
+        return pckg.Cat == category;
+    })
+
+    console.log('AwardsAdminModular.html:fillOutAccordion(). Target Board Category:' + category + ' Packages = ' +  tPackage);
+
+    var numOfPckgs;
+
+    if(tPackage.length>0){
+      numOfPckgs = tPackage.length + ' Package(s)';
+      pckgCategory[tPackage[0].Cat] = tPackage.length;
+    }else numOfPckgs='';
+
+    
+
+    var JC = [];
+
+    if(judgeCat.hasOwnProperty(category)){
+      
+      JC = judgeCat[category];
+      
+    }else JC.push('');
+
+    if(judgeCat.hasOwnProperty('All')){
+      JC.push(judgeCat['All']);
+    }
+
+    //create category
+    allCategories.push(addHTMLTemplate($('#t_CategoryItem'), $('#catField'), {'{Cat}':category, '{NumberOfPackages}':numOfPckgs, '{bCAT}':JC}));
+
+    //lets sort the packages based on its total rankings
+    tPackage = tPackage.sort(function(a,b){
+        //get total ranking for each package
+        //determine rankings of the package
+        var pckgRankingsSort_a = allRankings.filter(function(ranking){
+            return ranking.TargetPackage == a.ID;
+        });
+
+        //get total ranking for each package
+        //determine rankings of the package
+        var pckgRankingsSort_b = allRankings.filter(function(ranking){
+            return ranking.TargetPackage == b.ID;
+        });
+
+        var totalRankingsSort_a;
+        //get total rankings for package if there are any
+        if(pckgRankingsSort_a.length>0) totalRankingsSort_a = pckgRankingsSort_a.map(function(rnk){return rnk.Ranking;}).reduce(function(total, rnk){ return total+rnk;});
+        else totalRankingsSort_a=0;
+
+        //get total rankings for package
+        var totalRankingsSort_b
+        if(pckgRankingsSort_b.length>0) totalRankingsSort_b = pckgRankingsSort_b.map(function(rnk){return rnk.Ranking;}).reduce(function(total, rnk){ return total+rnk;});
+        else totalRankingsSort_b=0;
+
+        //save into the object
+        a['totalRanking']=  totalRankingsSort_a;
+        b['totalRanking']= totalRankingsSort_b;
+
+        return totalRankingsSort_a - totalRankingsSort_b;
+    });
+
+    console.log('AwardsAdminModular.html:fillOutAccordion(). sorted Packages =', tPackage);
+
+    //stores the ID of the package whose Top=true (indicating that it is the selected Top package)
+    var starSelectTopPckg=0;
+
+    ///empty select
+    $(allCategories[allCategories.length-1]).find('.starSelect').empty();
+
+    tPackage.map(function(pckg){
+      if(pckg.Top){
+        starSelectTopPckg=pckg.ID;
+      }
+      //add to the select all packages as an option to be selected as star (top package)
+      //i want to mask the names if non admin
+      var titleOfPackage = '##-MASKED-##';
+      if(typeof isAdmin!=='undefined'){
+        titleOfPackage=pckg.Title.split('_')[4];
+      }
+      $(allCategories[allCategories.length-1]).find('.starSelect').append(new Option(titleOfPackage,pckg.ID));
+    });
+
+    if(starSelectTopPckg==0){
+        $(allCategories[allCategories.length-1]).find('.starSelect').append(new Option('Choose Top Pckg',0));
+        //make sure this is the option that is selected
+        $(allCategories[allCategories.length-1]).find('.starSelect').val(0);
+    }else {//set the select to the identified top package
+        $(allCategories[allCategories.length-1]).find('.starSelect').val(starSelectTopPckg);
+    }
+
+    //if there are any packages that match the category then loop through them
+    $.each(tPackage, function(i,v){
+
+      //determine rankings of the package
+      var pckgRankings = allRankings.filter(function(ranking){
+        return ranking.TargetPackage == v.ID;
+      });
+
+      //lets make sure its sorted
+      pckgRankings=pckgRankings.sort(function(a,b){return a.Ranking-b.Ranking;});
+
+      //get total rankings for package
+      var totalRankings;
+      if(pckgRankings.length>0) totalRankings = pckgRankings.map(function(rnk){return parseInt(rnk.Ranking);}).reduce(function(total, rnk){ return total+rnk;});
+      else totalRankings =0;
+
+      var isTop;
+      if(v.Top){
+        isTop='fa fa-star';
+      } else isTop='';
+      
+      var filesButton;
+ 
+      if(v.Attachments.length>0)
+        filesButton ='<div style="text-align:center"><input class="attach attachButton" type="button" value="Get" onclick="getAttachments(this, '+true+')"></div>';
+      else filesButton ='<div class="adminOnly" style="text-align:center">None</div>';
+      
+      var maskedTitle = '';
+      var maskedTEXT = '';
+
+      //this is to restrict admin only view of attachments
+      //if(typeof isAdmin!=='undefined'){
+        //special group is logged in, so show title
+        maskedTitle =  v.Title.split('_')[4];
+      //}else {
+        //totalRankings='##-MASKED-##';
+        //filesButton='';
+        //if(v.MaskedID==null) maskedTitle = '##-MASKED-##';
+        //else maskedTitle = v.MaskedID;
+      //}
+
+      var rankOnly = v.Title.split(' ')[v.Title.split(' ').length-2];
+
+      if(rankOnly.length >2){
+        rankOnly = v.Title.split(' ')[v.Title.split(' ').length-2];
+      }else rankOnly = v.Title.split(' ')[v.Title.split(' ').length-1];
+      //v.Title.split(' ')[v.Title.split(' ').length-1]
+      if(v.MaskedID!=null) rankOnly = v.MaskedID;
+      console.log('admin v = ', v);
+      var packageHTML = addHTMLTemplate($('#t_PackageItem'), $(allCategories[allCategories.length-1]).find('.pckgHeader'), {  
+          '{pID}':v.ID, 
+          '{rowID}':v.ID,
+          '{Year}':v.Year, 
+          '{Unit}':v.Org, 
+          '{Nominee}':  v.NomineeName,//'<span class="masked"> '+ maskedTEXT + ' </span>' + '<span class="adminOnly">' + maskedTitle + '</span>' + rankOnly, 
+          '{Attach}':filesButton, 
+          '{totalRanking}':totalRankings, 
+          '{Top}':isTop}
+      );
+
+      $(packageHTML).find('input[type="button"]').click(function(event){
+        event.stopPropagation();
+      });
+
+      if(typeof isAdmin!=='undefined'){
+ 
+        $.each(pckgRankings,function(i,v){
+          //add  ranking template
+          var adminOnlyRanking = addHTMLTemplate($('#t_RankingItem'), $(packageHTML).find('.rankingHeader').parent(), {'{BoardMember}':v.JudgeTitle, '{Ranking}':v.Ranking, '{RankingID}':'r_'+v.ID, '{Score}':v.Score});
+          // $(packageHTML).find('.rankingHeader').parent()'
+          //$(packageHTML).find('.rankingHeader').parent().last().attr('spid', v.ID);
+          //console.log('adminOnlyRanking... =', v.ID);
+          $(packageHTML).find('.rankingHeader').parent().last().find('.hiddenNotesModal').find('textarea').html(v.Notes);
+          console.log( ' notes for ' + v.ID + ' is ' + v.Notes);
+          $(packageHTML).find('.rankingHeader').parent().last().find('.hiddenNotesModal').attr('id', 'r_' + v.ID);
+          $(packageHTML).find('.rankingHeader').parent().last().find('.hiddenNotesModal').dialog({
+            modal: true,
+            autoOpen:false,
+            height:440,
+            width:600,
+            resizable:true,
+            draggable:true,
+            closeExisting: false
+          });
+
+        });
+
+        //add a button to show all Notes at once!
+        $(packageHTML).find('.rankingHeader').parent().prev().append('<input type="button"  style="float:right; padding:0px; margin-right:4px;" value="all Notes" onclick="allNotes(this)">');
+
+    
+      
+      }else{
+        //prep h3 for disable
+        console.log('disable this ', $(packageHTML).find('.rankingHeader').parent())
+      }
+
+    })
+
+  })
+ 
+console.log('tPackage  = ', pckgCategory);
+//cat name |  total
+
+/*
+//loop through all board member html
+$.each($('#memberTable').find('tbody').find('tr.showPointer'), function(i,v){
+  console.log('iiiiii ', $(v).find('.UserImage').parent().attr('judgeid'));
+  var jID =  $(v).find('.UserImage').parent().attr('judgeid');
+  //compare jID to pckgCategory
+  if(judgeRanking.hasOwnProperty(jID)){
+    var allJC = {};
+    
+    $.each(judgeRanking[jID],function(ii,j){
+      if(!allJC.hasOwnProperty(j)) allJC[j]=[];
+      allJC[j].push(j);
+    })
+
+    console.log('allJC = ', allJC);
+
+    var rankingsLeftToDo = false;
+    //only if there is some to do
+
+
+    //now compare both arrays
+    for(prop in allJC){
+        if(pckgCategory.hasOwnProperty(prop)){
+          console.log('prop exists in allJC ', pckgCategory[prop]);
+          console.log('prop exists in allJC ', allJC[prop].length);
+          //compare
+          if(pckgCategory[prop]==allJC[prop].length){
+            //all complete
+          }else{
+            //no check!
+            rankingsLeftToDo=true;
+          }
+        }
+    }
+
+    if(!rankingsLeftToDo){
+      //show a check
+      $(v).closest('tr').html($(v).closest('tr').html().replace('{!}','<i style="" class="fa  fa-check"></i>'));
+    }else $(v).closest('tr').html($(v).closest('tr').html().replace('{!}',''));
+
+    //judgeRanking[jID].length >= pckgCategory)
+  }
+  console.log($($(v)[0]).prop('judgeid'));
+});
+
+*/
+  //#t_PackageItem //.pckgHeader
+  $('.lockICON').on('click', function(){
+    var lockIcon = $(this); 
+
+    lockIcon.toggleClass('fa-unlock fa-lock');
+    lockIcon.next().toggleClass('lock');  
+  });
+
+
+
+  $('.starSelect').change(function(){
+    //handle the top ranking package select change
+    changeTopPackage($(this));
+  });
+   
+    //activates the accordion
+    accordion= $(".accordion").accordion({
+      collapsible: true,
+      active:false,
+      heightStyle: "content"
+    });
+   
+
+
+
+    $('.adminEditPckg').on('click', function(){
+          var adminPackageID = $(this).closest('tr').attr('id').match(/\d+/);
+          console.log('adminPackageID = ', adminPackageID);
+          if(adminPackageID.length>0){
+            openModal(baseURL + '/Lists/Packages/EditForm.aspx?Id=' + adminPackageID, 'Edit Package Form', 700, 500);
+          }
+    });
+
+    if(typeof isAdmin!=='undefined'){
+            console.log('!!! Admin Only')
+            //detected that someone in the special group is logged in
+            //getStyle('.adminOnly',sSheet).display='';
+            console.log('discovered all adminOnly objects = ', $('.adminOnly'));
+            //$('.adminOnly').show();
+      }else {
+          $('.adminOnly').hide();
+          //disable tabs that cant be clicked
+          $('#catField').find('[id^="package_"]').css('cursor', 'default');
+        
+          $('#catField').find('[id^="package_"]').unbind('click');
+      } 
+}
+
+function allNotes(e){
+  console.log('clicked reveal notes. e = ', $(e).closest('div').find('tr[spid^="r_"]'));
+  //get all notes
+  var Notes = $(e).closest('div').find('tr[spid^="r_"]');
+
+  $.each(Notes, function(i,v){
+    var r_id = $(v).attr('spid');
+    console.log($(v).attr('spid'));
+    $('#' + r_id).dialog('open'); 
+  });
+}
+
+function revealNotes(e){
+  console.log('clicked reveal notes. e = ', $(e).closest('tr').attr('SPID'));
+  var dialogID = $(e).closest('tr').attr('SPID');
+  //open modal
+  $('#' + dialogID).dialog('open');    
+}
+
+function changeTopPackage(e){
+  console.log('AwardsAdminModular.html:changeTopPackage(). FUNCTION handle the change of the top package for the category. selected packageID = ',e.val());
+
+  var targetPackage = e.val();
+
+  var allPckgDivs = e.closest('.box').children('div:not([id="t_PackageItem"])');
+
+  console.log('AwardsAdminModular.html:changeTopPackage(). Loop through all identified Package DIVs ', allPckgDivs);
+  allPckgDivs.map(function(i,pckgDiv){
+    
+    var pID = $($(pckgDiv).children('h3')[0]).attr('id').split('_')[1];
+    console.log('AwardsAdminModular.html:changeTopPackage(). package ID = ', pID);
+
+    //if in our loop of all packages in the category we match what was selected in the drop down
+    if(pID==targetPackage)
+    {
+      console.log('AwardsAdminModular.html:changeTopPackage(). package ID '+ pID + ' = targetPackageID '+ targetPackage);
+      //check if target is already top= true, if so no action required
+      if(!allPackages.filter(function(p){return p.ID==pID;})[0].Top)
+      { 
+        console.log('AwardsAdminModular.html:changeTopPackage(). Determined that target is NOT already top');    
+        //its not true so set it so
+        allPackages.filter(function(p){return p.ID==pID;})[0].Top=true;
+        //also need to update it
+        starPackage(allPackages.filter(function(p){return p.ID==pID;})[0]);
+        //also need to change the html
+        $($($(pckgDiv).children('h3')[0]).find('i')[0]).addClass('fa fa-star');
+      }
+    }else{
+          
+      //only take action if Top=true currently (as it will need to be set to false)
+      if(allPackages.filter(function(p){return p.ID==pID;})[0].Top){
+         allPackages.filter(function(p){return p.ID==pID;})[0].Top=false;
+         unStarPackage(allPackages.filter(function(p){return p.ID==pID;})[0]);
+         //also need to change the html
+         $($($(pckgDiv).children('h3')[0]).find('i')[0]).removeClass('fa fa-star');
+      }
+    }
+
+  });
+
+}
+
+function unStarPackage(pckg){
+   //only update the top property
+   itemProperties={'Top':false};
+      //lock select
+      $('.starSelect').addClass('locked');
+var ajaxUpdatePackage = SPHUpdateItemByID('Packages', pckg.ID, itemProperties, baseURL, SPHGetItemType('Packages'));
+
+ajaxUpdatePackage.done(function(data){
+    console.log('AwardsAdminModular.html:unStarPackage(). pckg = ' + pckg + '  data = ' + data); 
+      //unlock select
+      $('.starSelect').removeClass('locked');
+}).fail(function(e){
+    console.error('AwardsAdminModular.html:unStarPackage(). Error attempting to set Top to false of pckg:' + pckg + ' error = ' + e.responseText);   
+    alert('Failed Updating Item by ID! ' + e.responseText);
+       //unlock select
+       $('.starSelect').removeClass('locked');
+    });
+
+}
+
+
+function starPackage(pckg){
+
+  //only update the top property
+  itemProperties={'Top':true};
+    //lock select
+    $('.starSelect').addClass('locked');
+    
+  var ajaxUpdatePackage = SPHUpdateItemByID('Packages', pckg.ID, itemProperties, baseURL, SPHGetItemType('Packages'));
+
+  ajaxUpdatePackage.done(function(data){
+    console.log('AwardsAdminModular.html:starPackage(). pckg = ' + pckg + '  data = ' + data); 
+      //unlock select
+      $('.starSelect').removeClass('locked');
+  }).fail(function(e){ 
+    console.error('AwardsAdminModular.html:starPackage(). Error attempting to set Top to true of pckg:' + pckg + ' error = ' + e.responseText);   
+    alert('Failed Updating Item by ID! ' + e.responseText);
+      //unlock select
+      $('.starSelect').removeClass('locked');
+    });
+
+
+}
+
+function CreateAdminAccordion(){
+  console.log('AwardsAdminModular.html:CreateAdminAccordion(). FUNCTION -creates the Accordion');
+
+  //empy select
+  $('select[id="boardChoice"').empty();
+  $('select[id="boardChoice"').append(new Option('...', 0)); //append ... as initial option 
+
+  //fill boardChoice with all board titles/ IDs
+  allBoards.map(function(board){
+    $('select[id="boardChoice"').append(new Option(board.Name, board.ID));
+  });
+
+  //Hook into the change event - if admin changes the target board
+  $('select[id="boardChoice"').change(function(){
+    console.log('AwardsAdminModular.html:CreateAdminAccordion(). boardChoice changed. Selection of boardID now =', $(this).val());
+    //grab the boards ID
+    var targetBoardID = $(this).val();
+
+    if(targetBoardID != 0){
+      //lets fill out accordion
+      fillOutWithYear(allBoards.filter(function(board){return board.ID == targetBoardID;})[0]);
+    }else{
+      //empty categories
+      $('#catField').empty();
+      //and empty years
+       //fill out year(s)
+     $('#yearSelect').empty();
+     $('#yearSelect').append(new Option('<- Select Board FIRST',0));
+     $('#closeOutMembers').addClass('locked');
+      $('#closeOutBoard').addClass('locked');
+     $('#yearSelect').val(0);
+      //empty member table
+      $('#memberTable').find('tbody').children('tr:not([id="templateJudge"])').empty();
+
+    }
+  });
+
+  //Hook into change of the yearSelect event
+  $('#yearSelect').change(function(){
+    console.log('AwardsAdminModular.html:CreateAdminAccordion(). yearSelect CHANGED.');
+    var targetBoardID = $('select[id="boardChoice"]').val();
+    if(targetBoardID != 0){
+      //lets fill out accordion
+      fillOutAccordion(allBoards.filter(function(board){return board.ID == targetBoardID;})[0], $(this).val());
+    }else{
+      //empty categories
+      $('#catField').empty();
+      //and empty years
+       //fill out year(s)
+     $('#yearSelect').empty();
+     $('#yearSelect').append(new Option('<- Select Board FIRST',0));
+     $('#yearSelect').val(0);
+    }
+  });
+
+
+}
+</script>
+
+<style>
+  @font-face{
+    font-family:FontAwesome;
+    src:url(/sites/20127/grps/sc/quality_assurance/SiteAssets/Scripts/fonts/FontAwesome.otf);
+  }
+
+  .accordion .ui-state-focus{
+    outline: none !important;
+  }
+    #adminHeader h3{
+       text-align: center;
+     }
+   .left{
+     float:left;
+   }
+   .center{
+     text-align:center;
+     display:inline-block;
+     width:100%;
+   }
+   .right{
+     float:right;
+   }
+   
+   #pPoint{
+     overflow-y: auto; 
+   }
+   
+   .box{
+     border: 1px solid black;
+     background-color:#F5F5F5 !important;
+   }
+   
+   .ui-widget-content{
+     background-color:gainsboro!important;
+   }
+   
+   
+   
+   .pckgHeader{
+     background-color:gainsboro;
+   }
+   
+   .rankingHeader{
+     background-color: grey;
+     color:white !important;
+     font-weight: bold !important;
+     transform:translateY(2px);
+     height:32px;
+   }
+   
+   .item{
+     /*border:none !important;*/
+     margin-top:0px!important;
+     background-color:#f6f6f6;
+     border:1px solid #c5c5c5;
+     padding-top:8px;
+     padding-bottom:8px;
+   }
+   
+   #boardChoice{
+     width: 55%;
+     display:inline-block;
+     font-size:x-large;
+   }
+   #yearSelect{
+     width:15%;
+     height:35px;
+   }
+   #boardChoiceLabel{
+     margin-right:20px;
+     display:inline-block;
+     font-size:large;
+   }
+   #adminHeader{
+     flex-basis: 70%;
+     flex-grow: 1;
+     flex-direction: row;
+     margin:10px;
+     padding:10px;
+     height:100%;
+
+   }
+   
+   select{
+     margin:5px;
+   }
+   .headerMod{
+     margin-block-start: .5em!important;
+     margin-block-end:.1em!important;
+   }
+   
+   /*will be used to hide buttons that are only for admin*/
+   
+    
+   
+   .ui-accordion .ui-accordion-header .ui-accordion-header-icon { 	
+     position: absolute; 	
+     left: 98.5%; 	
+     top: 40%; 
+   }
+   
+   .item table{
+     width:100%;
+     border-collapse: collapse;
+     table-layout: fixed;
+   }
+   
+   .item table tr td, #packagesHeader tr td{
+     text-align: center;
+   }
+   
+   #packagesHeader tr{
+     background-color: grey;
+     color:white;
+     font-weight: bold;
+     transform:translateY(2px);
+     height:32px;
+   }
+   
+    #packagesHeader td:nth-child(1){
+     width:25%;
+   }
+    #packagesHeader td:nth-child(2){
+     width:5%;
+   }
+    #packagesHeader td:nth-child(3){
+     width:30%;
+   }
+    #packagesHeader td:nth-child(4){
+     width:10%;
+   }
+   #packagesHeader td:nth-child(5){
+     width:15%;
+   }
+   #packagesHeader td:nth-child(6){
+     width:5%;
+   }
+
+   .item table td:nth-child(1){
+     width:25%;
+   }
+   .item table td:nth-child(2){
+     width:5%;
+   }
+   .item table td:nth-child(3){
+     width:30%;
+   }
+   .item table td:nth-child(4){
+     width:10%;
+   }
+   .item table td:nth-child(5){
+     width:15%;
+   }
+   .item table td:nth-child(6){
+     width:5%;
+   }
+   
+   #packagesTable, #packagesHeader{
+     width:100%;
+     vertical-align: middle;
+     border-collapse: collapse;
+     table-layout: fixed;
+   }
+   
+   #packagesTitle{
+     display:inline-block;
+     margin:5px;
+     font-size: large;
+   }
+   
+   .lock{
+     pointer-events: none;
+     background-color:grey;
+   }
+   
+   .helpIcon{
+     position:absolute;
+     top:5px;
+     right:10px;
+     color:black;
+   }
+   
+   .rHeader{
+     background-color:grey;
+     color:white;
+     font-weight: bold;
+     transform:translateY(2px);
+     height:32px;
+   }
+   
+   .rankingHeader table{
+     width:100%;
+     text-align: center;
+   }
+   
+   .rankingHeader table td{
+     padding:5px;
+   }
+   
+   .ranking table td:nth-child(1), .rankingHeader table td:nth-child(1){
+     width:80%;
+   }
+   .ranking table td:nth-child(2), .rankingHeader table td:nth-child(2){
+     width:20%;
+   }
+   
+   .ranking table{
+     width:100%;
+     text-align: center;
+   }
+   
+   .ranking table td{
+     padding:5px;
+   }
+   
+   #t_RankingItem{
+     display:none;
+   }
+   
+   #t_PackageItem{
+      display:none;
+   }
+   
+   #t_CategoryItem{
+     display: none;
+   }
+   
+   .starSelect{
+     min-width:150px;
+     max-width:200px;
+   }
+   
+   .main{
+           width:100%;
+           display:flex;
+       }
+       .centerSpot{
+           min-width:20%;
+           width:20%;
+           text-align: center;
+           float:left;
+       }
+       .leftSpot{
+           min-width:39%;
+           width:39%;
+           float:left;
+       }
+       .rightSpot{
+           min-width:39%;
+           width:39%;
+           text-align: right;
+           float:left;
+       }
+   
+       #adminBoardMembers{
+         flex-basis: 30%;
+         flex-grow: 1;
+         flex-direction: row;
+         height:100%;
+         padding:5px;
+         padding-top:10px;
+         margin:10px;
+       }
+   
+       #boardMembersBox{
+         border:1px solid black;
+         margin-left:2px;
+       }
+   
+       #memberTable{
+         height:100%;
+         width:100%;
+         table-layout: fixed;
+         border-collapse: collapse;
+         border-top:1px solid black;
+         border-bottom:1px solid black;
+       }
+   
+       #memberTable tr th td{
+         border:1px solid black;
+       }
+   
+       #memberTable th:nth-child(1),   #memberTable td:nth-child(1){
+         width:10%;
+       }
+       
+       #memberTable th:nth-child(2),   #memberTable td:nth-child(2){
+         width:30%;
+       }
+       
+       #memberTable th:nth-child(3),   #memberTable td:nth-child(3){
+         width:10%;
+       }
+       
+       #memberTable th:nth-child(4),   #memberTable td:nth-child(4){
+         width:10%;
+       }
+       #memberTable th:nth-child(5),   #memberTable td:nth-child(5){
+         width:35%;
+       }
+   
+       #memberTable th{
+         background-color:gainsboro;
+       }
+       #templateJudge{
+         display:none;
+       }
+   
+       #memberTable tbody tr:nth-child(even){
+         background-color: white;
+         border-bottom:1px solid grey;
+       }
+   
+       #memberTable tbody tr:nth-child(odd){
+         background-color: 	#F5F5F5;
+         border-bottom:1px solid grey;
+       }
+   
+       .UserImage{
+         max-width:32px;
+         height:auto;
+       }
+       .ui-accordion .ui-accordion-content{
+         overflow:none;
+       }
+   
+       .noOverflow{
+         text-overflow:ellipsis;
+         white-space:nowrap;
+         overflow:hidden;
+       }
+   
+       #closeOutMembers{
+         background-color:red;
+         border-color:red;
+         color:white;
+         font-size: medium;
+         font-weight:bold;
+         float:right;
+         cursor:pointer;
+       } 
+       .hover{
+            background-color:gold!important;
+        }
+        .showPointer{
+            cursor: pointer;
+        }
+        #WebPartWPQ9_ChromeTitle, #WebPartWPQ10_ChromeTitle{
+          cursor:pointer;
+        }
+        #closeOutBoard{
+          display:inline-block;
+          background-color:orangered;
+          color:white;
+          font-size: medium;
+          cursor: pointer;
+          font-weight: bold;
+        }
+        #noIE{
+          float:left;
+        margin:4px!important;
+        margin-bottom:6px !important;
+        font-weight: bold;
+    }
+    .boardMbrCat{
+      float:left;
+      margin-left:10px;
+    }
+</style>
+   
+<html xmlns:mso="urn:schemas-microsoft-com:office:office" xmlns:msdt="uuid:C2F41010-65B3-11d1-A29F-00AA00C14882"><head>
+<!--[if gte mso 9]><xml>
+<mso:CustomDocumentProperties>
+<mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Editor msdt:dt="string">BECHARD, WILLIAM J MSgt USAF HAF NASIC/SCP</mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Editor>
+<mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Author msdt:dt="string">BECHARD, WILLIAM J MSgt USAF HAF NASIC/SCP</mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Author>
+<mso:Order msdt:dt="string">1300.00000000000</mso:Order>
+</mso:CustomDocumentProperties>
+</xml><![endif]-->
+</head>

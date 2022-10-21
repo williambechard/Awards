@@ -1,0 +1,565 @@
+
+<script type="text/javascript" src="/teams/23840/SiteAssets/Scripts/jquery-3.6.0.min.js"></script>
+<script type="text/javascript" src="/teams/23840/SiteAssets/Scripts/SPHelper_v4.js"></script>
+<script type="text/javascript" src="/teams/23840/SiteAssets/Scripts/chosen.jquery.min.js"></script>
+<link rel="stylesheet" type="text/css" href="/teams/23840/SiteAssets/Scripts/chosen.min.css">
+<!--script type="text/javascript" src="https://org2.eis.af.mil/sites/20127/grps/sc/quality_assurance/SiteAssets/Scripts/jqueryUI/jquery-ui.min.js"></script>
+<link rel="stylesheet" type="text/css" href="https://org2.eis.af.mil/sites/20127/grps/sc/quality_assurance/SiteAssets/Scripts/jqueryUI/jquery-ui.min.css"-->
+
+
+<style type="text/css">
+    .ms-dialog #s4-ribbonrow, .ms-dialog .ms-cui-topBar2, .ms-dialog .s4-notdlg, .ms-dialog .s4-pr s4-ribbonrowhidetitle, .ms-dialog .s4-notdlg noindex, .ms-dialog #ms-cui-ribbonTopBars, .ms-dialog #s4-titlerow, .ms-dialog #s4-pr s4-notdlg s4-titlerowhidetitle, .ms-dialog #s4-leftpanel-content {display:none !important;}
+    .ms-dialog .s4-ca{margin-left:0px !important; margin-right:0px !important;}
+
+      /* Center the loader */
+#loaderforms{
+  position:absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 9999;
+  width: 150px;
+  height: 150px;
+  margin: -75px 0 0 -75px;
+  border: 16px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 16px solid #3498db;
+  width: 120px;
+  height: 120px;
+  -webkit-animation: spin 2s linear infinite;
+  animation: spin 2s linear infinite;
+}
+
+#greyOutforms{
+    position:absolute;
+    top:0px;
+    left:0px;
+    width:100%;
+    height:100%;
+    background-color: white;
+    z-index:9998;
+}
+
+@-webkit-keyframes spin {
+  0% { -webkit-transform: rotate(0deg); }
+  100% { -webkit-transform: rotate(360deg); }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.locked{
+    background-color: gainsboro !important;
+    pointer-events: none;
+}
+</style>
+<div id='greyOutforms'></div>
+<div id="loaderforms"></div>
+<script>
+    var isNewForm=false;
+    var listItemID='';
+    var baseURL= _spPageContextInfo.webAbsoluteUrl; 
+    var allJudges = [];
+    var allClosedYearsForTargetBoard = [];
+    var allPackages =[];
+
+    function Judges(ID, Cat, TargetBoard, Name, Status, Year, Judge){
+        this.ID = ID;
+        this.Cat = Cat;
+        this.TargetBoard = TargetBoard;
+        this.Name = Name;
+        this.Status = Status;
+        this.Year = Year;
+        this.Info = Judge;
+    }
+
+    function Packages(ID, Title, TargetBoard, Cat, Nominee, Org, Status, Attachments, Top, Year, Author, NomineeName, TBoard) {
+    this.ID = ID;
+    this.Title = Title;
+    this.TargetBoard = TargetBoard;
+    this.Cat = Cat;
+    this.Nominee = Nominee;
+    this.Org = Org;
+    this.Status = Status;
+    this.Attachments=Attachments;
+    this.Top = Top;
+    this.Year = Year;
+    this.Author = Author;
+    this.NomineeName = NomineeName;
+    this.TargetBoardTitle = TBoard;
+  }
+ 
+//    holds all board objects - pulled from AJAX call
+var allBoards = [];
+var boardTitle="";
+var nameResolved=false;
+var resolvedNameID='';
+var Year;
+//Object creation -Boards
+function Boards(ID, Name, SCDue, FinalDue, BoardDate, Categories){
+        this.ID = ID;
+        this.Name = Name;
+        
+        //we want to format dates to YYYY-MM-DD (original format had time which we strip with split)
+        // Example:
+        // 2020-05-17T00:20:23AM
+        // [0] = 2020-05-17
+        // [1] = 00:20:23AM
+        this.SCDue = SCDue.split('T')[0];
+        this.FinalDue = FinalDue.split('T')[0];
+        this.BoardDate=BoardDate.split('T')[0];
+
+        //Categories is a multi-line string, we want to separate by new line and store as array
+        //   Example:
+        //   SNCO
+        //   NCO
+        //   AMN
+        //   [0]=SNCO
+        //   [1]=NCO
+        //   [2]=AMN
+
+        var allCats = Categories; 
+        if(Categories!=null) allCats = allCats.split(/\r?\n/); //We provide a catch here in case Categories is null (IE no string was typed)
+        this.Categories = allCats;
+        
+}
+
+//entry point of program
+$(document).ready(function(){
+    //establish what year it is
+  
+    var url = window.location.pathname.split('/');
+
+    console.log("Is this here?", url[url.length-1]);
+
+    isNewForm=false;
+
+    if(url[url.length-1]=='NewForm.aspx'){
+        console.log('we are in New Form!')
+        isNewForm=true;
+    }else if(url[url.length-1]=='EditForm.aspx'){
+        console.log('we are in Edit Form!')
+        var vars = [], hash;  
+        var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+        
+        for(var i = 0; i < hashes.length; i++){     
+            hash = hashes[i].split('=');
+            vars.push(hash[0]);
+            vars[hash[0]] = hash[1];
+        }   
+
+     console.log('vars ', vars);
+     listItemID = vars["Id"].toString();
+
+    }
+    //establish what year it is
+    var d = new Date();
+    Year = d.getFullYear();
+    console.log('year = ', Year);
+    $('[id^="Status"]').closest('tr').hide();
+    
+    if(isNewForm) {
+        $('input[id^="Year"]').val(Year);
+    }
+
+    SP.SOD.executeFunc('clientpeoplepicker.js', 'SPClientPeoplePicker', function() {
+        var pickerDiv =$('[id^="Name"][title^="Name"]');
+        console.log('pickerDiv ', pickerDiv[0].id);
+        var picker = SPClientPeoplePicker.SPClientPeoplePickerDict[pickerDiv[0].id];
+        picker.OnUserResolvedClientScript = function(peoplePickerId, resolvedNameObj) {
+            //It will get the desired display name of the people from picker div, similarly any other property can be accessed via selectedUsersInfo
+            //var resolvedNameObj = selectedUsersInfo[0].DisplayText;
+            //console.log(selectedUsersInfo[0]);
+
+            $('input[value="Save"][type="button"]').addClass('locked');
+            console.log('resolvedNameObj= ', resolvedNameObj[0]);
+        
+            //do we have a resolved name?
+            if(resolvedNameObj.length>0 && resolvedNameObj[0].IsResolved==true){
+
+                //the key is what we want
+                console.log('key= ', resolvedNameObj[0].Key);
+       
+                //now do our ajax call providing the key - this would occasionally fail with folks outside of unit
+                //var getUserCall = getUserByID(resolvedNameObj[0].Key);
+
+                //now do our ajax call providing the key - this worked regardless
+                var lUser = getUserId(resolvedNameObj[0].Key);
+
+                
+            }else nameResolved=false;
+        }
+    });
+    
+    //This is to handle multiple promises so that we can exicute once all are done
+    //   It will hold each ajax promise in the array
+    var allPromises = [];
+
+    //console.log('selected =', $('select[id^="TargetBoard"]').find('option:selected').text());
+    $('input[id^="Title"]').closest('tr').hide();
+
+    //add our custom category drop down in the place of the original category input field
+    $('textarea[id^="CategoriesToJudge"]').closest('td').append('<select id="Cat" multiple="true"></select>');
+    //hide(s) the original category input field
+    $('textarea[id^="CategoriesToJudge"]').closest('td span:first-child').hide();
+    $('textarea[id^="CategoriesToJudge"]').hide();
+
+
+    /* #region Packages - load Packages AJAX */ //&$expand=AttachmentFiles
+    var ajaxPackages = SPHGetListItems('Packages', '?$select=ID,AuthorId, TargetBoard/Id, TargetBoard/Title, Category,Title,Top,Nominee/Id,Nominee/Title,Org,Year,Status,Attachments,AttachmentFiles&$expand=AttachmentFiles,Nominee,TargetBoard', baseURL);
+    allPromises.push(ajaxPackages); 
+
+    ajaxPackages.done(function (data) {
+        console.log('PackageListItemStyling.html:documnet.ready() ajaxPackages done. Packages data:', data);
+      //add all items to our list
+      $.each(data, function (i, v) {
+        allPackages.push(new Packages(v.Id, v.Title, v.TargetBoard.Id, v.Category, v.Nominee.Id, v.Org, v.Status, v.AttachmentFiles.results, v.Top, v.Year, v.AuthorId, v.Nominee.Title, v.TargetBoard.Title));
+      });
+      console.log('PackageListItemStyling.html:documnet.ready() allPackages array:', allPackages);
+    }).fail(function (e) {
+        console.error('PackageListItemStyling.html:documnet.ready() ajaxPackages FAIL: ', e.responseText);
+      alert('Failed Getting Packages List Items! ' + e.responseText);
+    });
+    allPromises.push(ajaxPackages); //End Packages
+    /* #endregion */
+
+    //Boards
+    var ajaxBoards = SPHGetListItems('Boards', '?$select=ID,Title,DueToSC,FinalDueDate,BoardDate,Categories', baseURL);
+    allPromises.push(ajaxBoards);
+    ajaxBoards.done(function(data){
+    console.log(data);
+    //loop through each elem of array
+    $.each(data, function(i,v){
+        //add each array item (v) to our list as a new Boards object
+        allBoards.push(new Boards(v.ID, v.Title, v.DueToSC, v.FinalDueDate, v.BoardDate, v.Categories));
+    });
+
+    console.log('all boards = ', allBoards);
+
+
+
+
+    //set our boardTitle to the selected text of our TargetBoard select dropdown object
+    boardTitle = $('select[id^="TargetBoard"]').find('option:selected').text()
+    
+    var chosenSelect = $('#Cat').chosen({
+        width: "100%",
+        placeholder_text_multiple: 'select Categories to Board. Hold CTRL + click to select multiple.'
+    });
+
+
+    //fill out select if we are in editform
+    if(!isNewForm){
+        console.log('we are in edit form!');
+        console.log('categories ! = ', $('textarea[id^="CategoriesToJudge"]').text());
+        
+        var allCats = $('textarea[id^="CategoriesToJudge"]').text();
+        console.log('allCats ! = ', allCats);
+
+        if(allCats!=null){
+            allCats = allCats.split(/\r?\n/);
+            console.log('allCats split ! = ', allCats);
+            $.each(allCats, function(i,v){
+                console.log('v =', v);
+                $('#Cat options[value="'+v+'"]').prop('selected', 'selected');
+            });
+           
+            $('#Cat').val(allCats).trigger('chosen:updated');
+        }
+    }
+
+
+    
+
+
+    }).fail(function(e){ alert('Failed Getting Board List Items! ' + e.responseText);});
+
+
+
+    //Judges
+    var ajaxJudges = SPHGetListItems('Judges', '?$select=ID,CategoriesToJudge,TargetBoardId,Name,Status,Year,Name/Title,Name/Id,Name/EMail,Name/UserName&$expand=Name', baseURL);
+    allPromises.push(ajaxJudges);
+
+    ajaxJudges.done(function(data){
+        console.log('judges area', data);
+        $.each(data, function(i,v){
+                allJudges.push(new Judges(v.ID, v.CategoriesToJudge, v.TargetBoardId, v.Name.Id, v.Status, v.Year, v.Name));
+        });
+    }).fail(function(e){ alert('Failed Getting Board List Items! ' + e.responseText);});
+    //End Judges
+
+
+       //We get allPromises from Awards.js. It contains all the promises from our AJAX calls
+    //   we hook into it here and only execute when they are all done.
+    $.when.apply($,allPromises).done(function(d){
+        console.log('all promises done');
+        
+        //Change our Cat dropDropDown Options to the Categories of our selected Option in TargetBoard
+        fillOutSelect( $('select[id^="TargetBoard"]'));  
+        
+
+        //Hook into the TargetBoard select Dropdown change event
+        //     and changing the Cat drop down using the function fillOutSelect
+        $('select[id^="TargetBoard"]').change(function(e){fillOutSelect($(this));});
+
+        //remove the loader/greyed out cover screen
+        document.getElementById("loaderforms").style.display = "none";
+        document.getElementById("greyOutforms").style.display = "none";
+    });
+
+
+
+});
+
+function getUserId(loginName) {
+    SP.SOD.executeFunc('sp.js', 'SP.ClientContext', function(){
+             var context = new SP.ClientContext.get_current();
+            this.user = context.get_web().ensureUser(loginName);
+            context.load(this.user);
+            context.executeQueryAsync(
+            Function.createDelegate(null, ensureUserSuccess),
+            Function.createDelegate(null, onFail)
+        );
+    });
+ }
+ function ensureUserSuccess() {
+    $('input[value="Save"][type="button"]').removeClass('locked');
+        nameResolved=true;
+        resolvedNameID=this.user.get_id();
+        console.log(this.user.get_id());
+ }
+ function onFail(sender, args) {
+    $('input[value="Save"][type="button"]').removeClass('locked');
+        nameResolved=false;
+        resolvedNameID='';
+        alert('Query failed. Error: ' + args.get_message());
+ }
+
+function fillOutSelect(dropDownBox){
+    ///get the text of the selected item from the dropDownBox
+    boardTitle = dropDownBox.find('option:selected').text();
+    
+    //first remove all options from the dropDownBox so that we can
+    //    fill it with the new options
+    $("#Cat").empty()
+        
+        //clear out our closed years as we will be re-creating it for the new target board
+        allClosedYearsForTargetBoard = [];
+        //fill out the options with categories
+        // based on the matched board Categories array
+
+        //store result of filter that matches the boardTitle to
+        //    the board object that matches title
+            var targetBoard = allBoards.filter(function(v){
+                return v.Name==boardTitle;
+            });
+            
+            //only proceed if we got the right board
+            if(targetBoard.length>0){
+                //the first index should be what we got
+                //  so get all categories from it
+                $.each(targetBoard[0].Categories, function(i,v){
+                    $("#Cat").append(new Option(v, v));
+                    //If the first item, then set it as the selected option
+                    //   of the dropDownBox -- only if !editForm
+                    if(isNewForm){
+                        if(i==0){
+                            $('textarea[id^="CategoriesToJudge"]').val(v);
+                        }
+                    }
+                });
+                console.log('JudgesListItemStyling.html: fillOutSelect(dropDownBox). #Cat drop down = ', $("#Cat"));
+            }
+
+            //get all packages for the target board
+            var allPackagesForThisBoard = allPackages.filter(function(pckg){
+                return pckg.TargetBoard == targetBoard[0].ID;
+            });
+
+            console.log('JudgeListItemStyling.html:fillOutSelect() all Packages for the targetBoard =', allPackagesForThisBoard);
+
+            //determine what years are closed and store them
+            $.each(allPackagesForThisBoard, function(i,pckg){
+                if(pckg.Status=="Closed" && pckg.Top){  //recent change - dont just see if board closed see if top pckg selected <- this allows
+                                                        // board members to be added after a board is closed, but before a winner is selected
+                    if(allClosedYearsForTargetBoard.indexOf(pckg.Year.toString())==-1) allClosedYearsForTargetBoard.push(pckg.Year.toString());
+                }
+            });
+
+            console.log('JudgeListItemStyling.html:fillOutSelect() all Years that are closed for targetBoard =', allClosedYearsForTargetBoard);
+            
+             
+            if(allClosedYearsForTargetBoard.indexOf(Year.toString())!=-1){
+                console.log('JudgeListItemStyling.html:fillOutSelect() Determined that the currentYear is already closed for this board, so remove the text from the Year field');
+                //remove the current year as it is closed
+                $('input[id^="Year"]').val('');
+            }else{
+                $('input[id^="Year"]').val(Year.toString());
+            }
+
+
+           
+            $('#Cat').trigger("chosen:updated");
+            console.log('cat value = ',$('#Cat').val());
+
+            //Select Cat for this board
+            if(!isNewForm){
+                console.log()
+                var allCats = $('textarea[id^="CategoriesToJudge"]').text();
+                console.log('cat all text area = ',  $('textarea[id^="CategoriesToJudge"]').text());
+            
+                console.log('allCats ! = ', allCats);
+
+                if(allCats!=null){
+                    allCats = allCats.split(/\r?\n/);
+                    console.log('allCats split ! = ', allCats);
+                    $.each(allCats, function(i,v){
+                        console.log('v =', v);
+                        
+                        $('#Cat options[value="'+v+'"]').prop('selected', 'selected');
+                    });
+                    $('#Cat').val(allCats).trigger('chosen:updated');
+                }
+            }
+
+            //update tBoard title;
+            tBoard = boardTitle;
+            // update the title field
+             console.log('finished');
+        
+}
+
+function getUserByID(userName){
+    
+  //userName format = i:0#.w|bidev\sp_admin
+  var siteUrl = _spPageContextInfo.siteAbsoluteUrl;
+
+    var call = $.ajax({
+    url: siteUrl + "/_api/web/siteusers(@v)?@v='" + 
+            encodeURIComponent(userName) + "'",
+    method: "GET",
+    headers: { "Accept": "application/json; odata=verbose" }
+    });
+return call;
+}
+
+ //Append an error message to a field
+ function WriteErrorMessage(inputElement, message){
+    var errorMessageMarkup = '<span class="errorMessage ms-formvalidation ms-csrformvalidation"><span role="alert">' + message + '<br></span>';
+    $(inputElement).parent().append(errorMessageMarkup);
+}
+
+function PreSaveAction() { 
+    var canSave=false;
+       //Clear out existing error messages
+       $('.errorMessage').remove();
+
+
+    console.log('CAT = ', $('#Cat'));
+ 
+    var allSelectedCat = $('#Cat').val().join("\n");
+ 
+    //clear old values by setting it to currect Cat value(s)
+    $('textarea[id^="CategoriesToJudge"]').val(allSelectedCat);
+    console.log('cat to judge val = ', $('textarea[id^="CategoriesToJudge"]').val());
+
+    console.log('nameResolved = ', nameResolved);
+
+
+    if(allClosedYearsForTargetBoard.indexOf($('input[id^="Year"]').val())!=-1){
+ 
+    console.error('Note - the Board ' + $('select[id^="TargetBoard"]').find('option:selected').text() + ' has already been closed and no additional packages for Year ' + $('input[id^="Year"]').val() + ' are being accepted');
+ 
+    //display error message
+    WriteErrorMessage($('input[id^="Year"]'), 'The Board (' + $('select[id^="TargetBoard"]').find('option:selected').text() + ') has already been closed and no additional Judges can be Submitted for Year (' + $('input[id^="Year"]').val() + '). You must choose a different Board/Year.');
+
+    canSave=false;
+
+    }else{ canSave=true;}
+
+    if(nameResolved && canSave){
+        //check to see if name (for Board Member) is already assigned to the board
+        // this is for newForm...
+        //   for editform we need to exclude the current Judge ID
+        var isJudgeOnBoardAlready = allJudges.filter(function(v){
+            if(listItemID != v.ID) return v.Name == resolvedNameID && v.Year == $('input[id^="Year"]').val();
+        }).map(function(v,i){
+            return v.TargetBoard;
+        });
+
+        //allJudges[0] ID=1, Name=441, TargetBoard=1
+        //allJudges[1] ID=2, Name=441, TargetBoard=2
+
+        //isJudgeOnBoardAlready[0] = 1
+        //isJudgeOnBoardAlready[1] = 2
+         
+
+        console.log('judge board test = ', isJudgeOnBoardAlready);
+        console.log('targetBoard value = ', $('select[id^="TargetBoard"]').val());
+        //console.log('judge assigned to board alread? ', isJudgeOnBoardAlready.elemetExists($('select[id^="TargetBoard"]').val()));
+        //Check if the target board ID is already assigned to this judge (if it is in the array)
+        var alreadyOnBoard = false;
+        $.each(isJudgeOnBoardAlready, function(i,v){
+            if(v == $('select[id^="TargetBoard"]').val()){
+                alreadyOnBoard=true;
+                return false; // breaks
+            }
+        });
+        console.log('alredy on board ', alreadyOnBoard);
+
+        if(alreadyOnBoard){
+
+            alert('Board Member already registered to the ' + $('select[id^="TargetBoard"]').find('option:selected').text() + ' Board. Please choose a different Board, or a different Board Member.');
+            canSave=false;
+            //return false;
+
+        }else canSave=true;
+        
+        //return true;
+    }// we dont do this becuase we need it to error out and return true (as the field isnt resolved) else return false;
+
+   if(canSave) return true;
+   else return false;
+
+   
+}
+
+/*
+
+function getSPID(peoplePickerFieldTitle){
+  //Get the people picker field
+  var ppDiv = $("div[title='" + peoplePickerFieldTitle + "']")[0];
+  console.log(ppDiv.id);
+    //cast the object as type PeoplePicker
+    console.log(SPClientPeoplePicker);
+    var peoplePicker = SPClientPeoplePicker.SPClientPeoplePickerDict[ppDiv.id];
+    consoel.log(peoplePicker);
+ 
+    //Get list of users from field (assuming 1 in this case)
+    var userList = peoplePicker.GetAllUserInfo();
+    console.log(userList);
+    var userInfo = userList[0];
+    var nameID;
+ 
+    //The description field contains the login info without the lookup extras.  In new forms this 
+    //field can be undefined depending on the field being checked.  Only check if userInfo is
+    //initialized.
+    if(userInfo != null)
+    {
+        console.log(userInfo.EntityData);
+        nameID = userInfo.EntityData.Id;
+    }
+ 
+    return nameID;
+}
+ */
+</script><html xmlns:mso="urn:schemas-microsoft-com:office:office" xmlns:msdt="uuid:C2F41010-65B3-11d1-A29F-00AA00C14882"><head>
+<!--[if gte mso 9]><xml>
+<mso:CustomDocumentProperties>
+<mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Editor msdt:dt="string">BECHARD, WILLIAM J MSgt USAF HAF NASIC/SCP</mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Editor>
+<mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Author msdt:dt="string">BECHARD, WILLIAM J MSgt USAF HAF NASIC/SCP</mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Author>
+<mso:Order msdt:dt="string">1200.00000000000</mso:Order>
+</mso:CustomDocumentProperties>
+</xml><![endif]-->
+</head>

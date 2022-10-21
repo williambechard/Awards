@@ -1,0 +1,1333 @@
+<!-- #region Loader HTML -->
+<div id='greyOutforms'></div>
+<div id="loaderforms"></div>
+<!-- #endregion -->
+
+<!-- #region SubmitRankingsModal HTML-->
+<!-- #region RankingsTAB HTML -->
+<div class="tab" id="templateTab">
+    <input type="radio" id="tab-{catName}" name="tab-group-1">
+    <label for="tab-{catName}" title="{catName}"> </label>
+        <div class="content">
+            <div><span id="noIE">WARNING: Get Attach Btn does not work in IE. Please use Edge or Chrome</span>
+                <h1 class="tableTitle">{tableTitle}</h1>
+                <br>
+                <table class='contentTable'>
+                    <thead>
+                        <th>Title</th>
+                        <th>Nominee</th>
+                        <th>Cat</th>
+                        <th>Unit</th>
+                        <th>Attach</th>
+                        <th title="Score of package. Board President can determine method/range">Score</th>
+                        <th title="(1 to n (1 best))">Ranking</th>
+                        </th>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+</div>
+<iframe src="" id="download-iframe" style="display:none;"></iframe>
+<!-- #endregion -->
+<!-- #region Notes DIALOG HTML-->
+<div id="NotesModal"  title="Notes">
+    <span rID=""></span>
+    <div class="Warning">Notes will not SAVE unless you SUBMIT the ranking.</div>
+    <br>
+    <div style="color:blue; margin-bottom:2px;">Package Improvement Notes: (FORMAT- bullet 1: XX is a weak action verb, replace with...)</div>
+    <textarea id="notesText" placeholder="(FORMAT- bullet 1: XX is a weak action verb, replace with...)"></textarea>
+</div>
+<!-- #endregion -->
+<!-- #region SubmitRankingsModal DIALOG HTML-->
+<div id="dialog" title="Submit Board Rankings">
+    <div id="noInteraction"></div>
+    <div id="mainContainer">
+        <br>
+        <br>
+        <div class="info">
+            Please select the Target Board to Rank. <span class="note">Note: You will only be able to
+                Rank the Categories you are assigned to.</span>
+        </div>
+        <br>
+        <div style="font-size:medium;">
+            <label for="tBoard" class="bold">Target Board</label>
+            <select name="tBoard" class="rounded" id="tBoard"></select>
+        </div>
+        <div class="tabs" id="TabsContainer">
+        </div>
+    </div>
+</div>
+<!-- #endregion -->
+<!-- #endregion -->
+
+<!-- #region Awards Button Menu -->
+<div id="buttonCenter">
+    <input type="button" value="Submit Package" class="pageButton locked awardManagers" id="submitPackage" onclick="return false;">
+    <input type="button" value="Submit Board Member" class="pageButton awardManagers locked" id="submitJudge" onclick="return false;">
+    <input type="button" value="Submit Rankings" class="pageButton locked" id="submitRanking">
+    <span id="generalHelp" style="float:right; margin-right:80px;"><a href="#" target="_blank"><i class="fa fa-question-circle fa-3x generalHelpIcon" aria-hidden="true"></i></a></span>
+</div>
+<!-- #endregion -->
+
+<style title="AwardsModular.css">
+    #noIE{
+        color:red;
+        float:right;
+    }
+    .Warning{
+        color:red;
+        text-align: center;
+    }
+    #notesText{
+        width:98%;
+        height:82%;
+    }
+    .awardManagers{
+        
+    }
+
+    #generalHelp{
+        position:absolute;
+        right: 25px;
+   }
+   
+
+    [id^="MSOZoneCell_WebPartWPQ"]{
+        transform:translateY(-60px);
+    }
+
+    /* #region Loader CSS */
+    #loaderforms{
+      position:absolute;
+      left: 50%;
+      top: 50%;
+      z-index: 9999;
+      width: 150px;
+      height: 150px;
+      margin: -75px 0 0 -75px;
+      border: 16px solid #f3f3f3;
+      border-radius: 50%;
+      border-top: 16px solid #3498db;
+      width: 120px;
+      height: 120px;
+      -webkit-animation: spin 2s linear infinite;
+      animation: spin 2s linear infinite;
+    }
+    
+    #greyOutforms{
+        position:absolute;
+        top:0px;
+        left:0px;
+        width:100%;
+        height:9999px;
+        background-color: white;
+        z-index:9998;
+    }
+    
+    @-webkit-keyframes spin {
+      0% { -webkit-transform: rotate(0deg); }
+      100% { -webkit-transform: rotate(360deg); }
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    /* #endregion End Loader */
+
+    /* #region Award Buttons Menu */
+    #submitPackage{
+        background-color:darkviolet;
+    }
+    #submitJudge{
+        background-color:forestgreen;
+    }
+    #submitRanking{
+        background-color:saddlebrown;
+    }
+
+    .pagebutton:hover{
+        background-color:darkgrey !important;
+    }
+
+    .pageButton{
+        border: none !important;
+        color: white !important;
+        padding: 15px 32px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 22px !important;
+        cursor:pointer!important;
+    }
+    #buttonCenter{
+        display: -webkit-box;
+        display: -moz-box;
+        display: -ms-flexbox;
+        display: -webkit-flex;
+        display: flex;
+        -webkit-box-align : center;
+        -moz-box-align    : center;
+        -ms-flex-align    : center;
+        -webkit-align-items : center;
+        align-items : center ;
+        justify-content : center;
+        -webkit-justify-content : center;
+        -webkit-box-pack : center;
+        -moz-box-pack : center;
+        -ms-flex-pack : center;
+        transform:translateY(20px);
+    }
+    /* #endregion End Awards Button Menu */
+
+    /* #region RankingModal CSS*/
+    .ui-widget-overlay
+    {
+        opacity: .50 !important; /* Make sure to change both of these, as IE only sees the second one */
+        filter: Alpha(Opacity=50) !important;
+        background: rgb(90, 90, 90) !important; /* This will make it darker */
+    }
+
+    .tabs {
+        position: relative;
+        min-height: 90%; /* This part sucks */
+        clear: both;
+        margin: 25px 0;
+    }
+    .tab {
+        float: left;
+    }
+    .tab label {
+        background: #eee;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 15px 15px 0px 0px;
+        margin-left: -1px;
+        position: relative;
+        left: 1px;
+    }
+    .tab [type="radio"] {
+        opacity: 0;
+    }
+    .content {
+        position: absolute;
+        top: 28px;
+        left: 0;
+        background:#F8F8F8;
+        right: 0;
+        bottom: 0;
+        padding: 20px;
+        border: 1px solid #ccc;
+        border-radius: 0px 15px 15px 15px;
+        overflow: hidden;
+        transform:translateY(-3px);
+    }
+    .tab [type="radio"]:focus ~ label {
+        outline: 2px solid blue;
+    }
+    .tab [type="radio"]:checked ~ label {
+        background: white;
+        border-bottom: 1px solid white;
+        z-index: 2;
+    }
+    .tab [type="radio"]:checked ~ label ~ .content {
+        z-index: 1;
+    }
+    .tab [type="radio"]:checked ~ label ~ .content > * {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    .tab [type="radio"]:hover ~ label{
+        cursor: pointer;
+    }
+    .tab [type="radio"]{
+        display:none;
+    }
+    #mainContainer{
+        width:100%;
+        height:96%;
+    }
+    #tBoard{
+        width:53%;
+        margin-left:10px;
+    }
+    #tYear{
+        width:30%;
+    }
+    .info{
+        color:grey;
+        font-size: small;
+    }
+    .note{
+        color:royalblue;
+        font-weight: bold;
+        font-size: smaller;
+    }
+    label{
+        
+    }
+    .bold{
+        font-weight: bold;
+    }
+    #templateTab{
+        display:none;
+    }
+
+    .centerMask{
+        text-align: center;
+    }
+
+    .masked{
+        font-weight: bold;
+    }
+
+    .Score{
+        max-width:82%;
+        margin-left:2px;
+        display:inline-block;
+        width:50%;
+        border-radius: 15px;
+        box-shadow:none;
+        outline:none;
+    }
+
+    .contentTable{
+        width:100%;
+        height:80%;
+        table-layout: fixed;
+        border:solid 1px black;
+        border-collapse: collapse;
+    }
+
+    .contentTable td, .contentTable th{
+        border:1px solid grey;
+    }
+
+    .contentTable td:nth-of-type(1), .contentTable th:nth-of-type(1){
+        width:15%;
+    }
+    .contentTable td:nth-of-type(2), .contentTable th:nth-of-type(2) {
+        width:15%;
+    }
+    .contentTable td:nth-of-type(3), .contentTable th:nth-of-type(3) {
+        width:10%;
+    }
+    .contentTable td:nth-of-type(4), .contentTable th:nth-of-type(4) {
+        width:10%;
+    }
+    .contentTable td:nth-of-type(5), .contentTable th:nth-of-type(5) {
+        width:10%;
+    }
+    .contentTable td:nth-of-type(6), .contentTable th:nth-of-type(6) {
+        width:20%;
+    }
+    .contentTable td:nth-of-type(7), .contentTable th:nth-of-type(7) {
+        width:15%;
+    }
+    .contentTable th{
+        background-color: lightgray !important;
+    }
+
+    .contentTable tbody tr:nth-child(even) {
+        background-color: #F5F5F5;
+    }
+    .contentTable tbody tr:nth-child(odd) {
+      background-color: white;
+    }
+
+    #dialog, #NotesModal .hiddenNotesModal{
+        overflow:hidden!important;
+    }
+    #dialog{
+     
+      
+    }
+    .tableTitle{
+        text-align: center;
+        font-weight: bold;
+        color:black;
+    }
+    .notificationArea{
+        text-align: center;
+        font-size:xx-large;
+        color:red;
+        font-weight: bold;
+    }
+    .sButton{
+        margin-top:10px;
+        float:right;
+        background-color:yellowgreen !important;
+        border:1px solid yellowgreen !important;
+        font-weight: bold !important;
+        color:white !important;
+        cursor:pointer !important;
+    }
+
+    .sButton:focus { 
+        outline-style:none!important; }
+    .savedRow{
+        /*border:2px solid yellowgreen!important;*/
+        background-color: yellowgreen !important;
+    }
+
+    select{
+        cursor:pointer!important;
+    }
+
+    #noInteraction{
+        position:absolute;
+        top:0px;
+        left:0px;
+        width:100%;
+        height:100%;
+        background-color: rgba(255,255,255,0.40);
+        z-index:9998;
+        display:none;
+    }
+
+    .rankingSelect{
+        border-radius: 15px;
+        width:86%;
+    }
+
+    .rounded{
+        border-radius: 15px;
+    }
+
+    .divCat{
+        float:left;
+        margin-left:2px;
+    }
+
+    .attach{
+        min-width:90% !important;
+        width:90% !important;
+        max-width:90% !important;
+        border-radius: 5px!important;
+        background-color: tomato !important;
+        color:white!important;
+        margin-left:0px!important;
+        border-color:tomato!important;
+        cursor:pointer!important;
+    }
+    /* #endregion */
+
+    .locked{
+        background-color: gainsboro !important;
+        pointer-events: none;
+        border-color: grey!important;
+    }
+    
+    .adminOnly{
+        /*border:2px solid red !important;*/
+    }
+
+    #s4-workspace{
+        overflow: hidden;
+        height: auto;
+        position: fixed;
+        width:100%;
+    }
+    .ms-dlgTitle{
+    text-align: center;
+    background-color:grey;
+    }
+ 
+    .ms-dlgTitle h1{
+        color:white;
+        font-weight: bold!important;
+        font-size:x-large;
+    }
+
+    .ms-dlgCloseBtn span{
+        margin-right:4px;
+        margin-left:2px;
+        background-color:white;
+        border-radius:50%;   
+    }
+    .hiddenText{
+        display:none;
+    }
+    #pageTitle{
+        transform: translateX(30px)!important;
+    }
+    .ui-dialog-titlebar-close {
+  background: url("http://code.jquery.com/ui/1.10.3/themes/smoothness/images/ui-icons_888888_256x240.png") repeat scroll -93px -128px rgba(0, 0, 0, 0) !important;
+  border: medium none;
+  min-width:1.8em !important;
+}
+.ui-dialog-titlebar-close:hover {
+  background: url("http://code.jquery.com/ui/1.10.3/themes/smoothness/images/ui-icons_222222_256x240.png") repeat scroll -93px -128px rgba(0, 0, 0, 0) !important;
+  min-width:1.8em !important;
+}
+</style>
+ 
+
+<script type="text/javascript" src="/teams/23840/SiteAssets/Scripts/jquery-3.6.0.min.js"></script>
+<script type="text/javascript" src="/teams/23840/SiteAssets/Scripts/SPHelper_v4.js"></script>
+<script type="text/javascript" src="/teams/23840/SiteAssets/Scripts/jquery.dataTables.min.js"></script>
+
+<link rel="stylesheet" href="/teams/23840/SiteAssets/Scripts/jquery.modal.min.css">
+<link rel="stylesheet" href="/teams/23840/SiteAssets/Scripts/jquery-ui.min.css">
+
+ 
+<script type='text/javascript' src="/teams/23840/SiteAssets/Scripts/jquery-ui.min.js"></script>
+<script type='text/javascript' src="/teams/23840/SiteAssets/Scripts/main.min.js"></script>
+<script type='text/javascript' src="/teams/23840/SiteAssets/Scripts/jquery.modal.min.js"></script>
+
+
+
+
+<script type='text/javascript' src="/teams/23840/SiteAssets/Admin/Awards/Awards.js"></script>
+
+
+
+<script>
+$(window).on("load", function(){
+    console.error('ALL SCRIPTS Loaded');
+    pageInit();
+    
+});
+$(document).ready(function(){
+    $('#siteIcon').next().find('.ms-breadcrumb-top').hide();
+    $('#siteIcon').empty();
+    $('#siteIcon').append('<a href="https://usaf.dps.mil/teams/23840/SiteAssets/Home.aspx"><img src="https://usaf.dps.mil/teams/23840/SiteAssets/BESPIN_Logo_FullColor_Vertical_Dark_RGB.png" style="max-width:100px; max-height:100px;"></a>')
+    //$(".ui-button-icon").text("X");
+});
+/*
+$(document).ready(function(){
+    var allScripts = [];
+
+$.getScript('/sites/20127/grps/sc/quality_assurance/SiteAssets/Scripts/SPHelper_v4.js').done(function(){
+    $.getScript('/sites/20127/grps/sc/quality_assurance/SiteAssets/Scripts/jqueryUI/jquery-ui.min.js').done(function(){
+        $.getScript('/sites/20127/grps/sc/scp/scpd/SCPDKMC/SCPDDashBoard/Documents/Scripts/main.min.js').done(function(){
+            $.getScript('/sites/20127/grps/sc/quality_assurance/SiteAssets/Scripts/jquery.modal.min.js').done(function(){
+                $.getScript('/sites/20127/grps/sc/quality_assurance/SiteAssets/Scripts/jquery.dataTables.min.js').done(function(){
+                    $.getScript('/sites/20127/grps/sc/Awards/SiteAssets/Scripts/Awards.js').done(function(){
+                        console.error('ALL SCRIPTS Loaded');
+                        pageInit();
+                    })
+                })
+            })
+        })
+    })
+})
+    
+    allScripts.push($.getScript('/sites/20127/grps/sc/quality_assurance/SiteAssets/Scripts/SPHelper_v4.js', function(){
+        $.getScript('/sites/20127/grps/sc/quality_assurance/SiteAssets/Scripts/jqueryUI/jquery-ui.min.js', function(){
+            $.getScript('/sites/20127/grps/sc/scp/scpd/SCPDKMC/SCPDDashBoard/Documents/Scripts/main.min.js', function(){
+                $.getScript('/sites/20127/grps/sc/quality_assurance/SiteAssets/Scripts/jquery.dataTables.min.js', function(){
+                    $.getScript('/sites/20127/grps/sc/quality_assurance/SiteAssets/Scripts/jquery.modal.min.js', function(){
+                        $.getScript('/sites/20127/grps/sc/Awards/SiteAssets/Scripts/Awards.js', function(){
+                            pageInit();
+                            console.error('ALL SCRIPTS Loaded');
+                        });
+                    });
+                });
+            });
+        });
+    });
+
+
+
+    $.when.apply($, allScripts).done(function(){
+        console.log('all Scripts complete');
+    });
+});*/
+
+/*
+var callback = function(){
+    // Handler when the DOM is fully loaded
+  
+    SP.SOD.registerSod("jquery.js", "/sites/20127/grps/sc/quality_assurance/SiteAssets/Scripts/jquery-3.4.1.min.js")   
+    SP.SOD.registerSod("SPHelper.js", "/sites/20127/grps/sc/quality_assurance/SiteAssets/Scripts/SPHelper_v4.js")
+
+    SP.SOD.registerSodDep("SPHelper.js", "jquery.js");
+
+    SP.SOD.registerSod("UI.js", "/sites/20127/grps/sc/quality_assurance/SiteAssets/Scripts/jqueryUI/jquery-ui.min.js") 
+    SP.SOD.registerSodDep("UI.js", "SPHelper.js");
+    
+    SP.SOD.registerSod("Dialog.js", "/sites/20127/grps/sc/scp/scpd/SCPDKMC/SCPDDashBoard/Documents/Scripts/main.min.js") 
+    SP.SOD.registerSodDep("Dialog.js", "UI.js");
+      
+    SP.SOD.registerSod("DataTables.js", "/sites/20127/grps/sc/quality_assurance/SiteAssets/Scripts/jquery.dataTables.min.js") 
+    SP.SOD.registerSodDep("DataTables.js", "UI.js");
+
+    SP.SOD.registerSod("Awards.js", "/sites/20127/grps/sc/Awards/SiteAssets/Scripts/Awards.js")
+    SP.SOD.registerSodDep("Awards.js", "DataTables.js");
+
+    SP.SOD.registerSod("Modal.js", "/sites/20127/grps/sc/quality_assurance/SiteAssets/Scripts/jquery.modal.min.js")
+    SP.SOD.registerSodDep("Modal.js", "Awards.js");
+
+    SP.SOD.loadMultiple(['jquery.js','SPHelper.js', 'UI.js', 'DataTables.js', 'Awards.js','Modal.js'], loaded2);
+};
+if (
+    document.readyState === "complete" ||
+    (document.readyState !== "loading" && !document.documentElement.doScroll)
+) {
+  callback();
+} else {
+  document.addEventListener("DOMContentLoaded", callback);
+}*/
+
+var sSheet;
+function getStyleSheet(unique_title) {
+  for(var i=0; i<document.styleSheets.length; i++) {
+    var sheet = document.styleSheets[i];
+    if(sheet.title == unique_title) {
+      return sheet;
+    }
+  }
+}
+
+var allNotes=[];
+
+function getStyle(className, styleSheet) {
+    var cssText = "";
+    var classes = styleSheet.rules || styleSheet.cssRules;
+    var cssResult;
+    for (var x = 0; x < classes.length; x++) {        
+        if (classes[x].selectorText == className) {
+            return classes[x].style;
+            //cssText += classes[x].cssText || classes[x].style.cssText;
+        }         
+    }
+    return null;
+}
+
+
+
+// #region Main entry point. This loads once all JS script sare Loaded (with the above callback function)
+function loaded2(){
+
+    $('.generalHelpIcon').closest('a').hide();
+    sSheet = getStyleSheet('AwardsModular.css');
+    var ruleToChange = getStyle('.ms-dlgTitle',sSheet);
+ 
+    console.log('AwardsModular.html:loaded(). The URL root location of the Awards Lists: Boards/Judges/Packages/Rankings = '+  _spPageContextInfo.webAbsoluteUrl + " . If these lists are at a different site/sub site, then the global variable baseURL at the top of the Awards.js script will need to be changed to reflect the root location of these lists.");
+
+    //We get allPromises from Awards.js. It contains all the promises from our AJAX calls
+    //   we hook into it here and only execute when they are all done.
+    //$.when.apply($,allPromises).done(function(d){
+        console.error('loaded2 !!!!');
+        calendarReady();
+        setupSlideShow();
+        setupAllBoardsDisplay();
+        setupLoggedInUsersPckgs();
+        setupLoggedInUsersBoards();
+        scriptReadyADMIN();
+        setInterval(function() {
+                UpdateFormDigest(_spPageContextInfo.webServerRelativeUrl, _spFormDigestRefreshInterval);
+        }, 4 * 60000);
+        console.log('AwardsModular.html:loaded(). all promises are done from Awards.js');
+
+        // #region Setup our Awards Buttons Menu
+        $('#submitPackage').on('click', function (){
+            console.log('submit board member clicked', $(this).css('background-color'));
+
+            ruleToChange.backgroundColor=$(this).css('background-color');
+        
+            openModal(baseURL + '/Lists/Packages/NewForm.aspx?IsDlg=1', 'Submit Package Form', 600, 500); 
+        });
+
+        $('#submitJudge').on('click', function(){
+            console.log('submit board member clicked');
+            ruleToChange.backgroundColor=$(this).css('background-color');
+            openModal(baseURL + '/Lists/Judges/NewForm.aspx?IsDlg=1', 'Submit Board Member Form', 600, 500);
+        });
+
+        //unlock buttons
+        $('#submitPackage').removeClass('locked');
+        $('#submitJudge').removeClass('locked');
+        // #endregion
+        
+        
+        console.log('AwardsModular.html:loaded(). logged in user = ', userID);
+  
+      if (_spPageContextInfo != null) {
+            setupRankingModal(); //setup the Ranking Modal
+
+            var wWidth = $(window).width();
+            var dWidth = wWidth * 0.8;
+            var wHeight = $(window).height();
+            var dHeight = wHeight * 0.8;
+
+            //Activate our RankingModal (wont be visible until submitButton clicked)
+            $("#dialog").dialog({ 
+                autoOpen: false,
+                width:dWidth,
+                height:dHeight, 
+                modal: true,
+                resizable: false,
+                draggable:false 
+            });
+
+            $('#dialog').on('dialogclose', function(e){
+                $('#NotesModal').dialog('close');
+            });
+
+            $('#NotesModal').dialog({
+                modal: true,
+                autoOpen:false,
+                height:440,
+                width:600,
+                resizable:false,
+                draggable:true,
+                closeExisting: false,
+                close: function(event, ui) { 
+                    console.log('notetext = ',  $(this).find('span:first-child').prop('rID'));
+                    var rowID = $($(this).find('span:first-child').prop('rID')[0]); 
+       
+                    console.log('aiiasdf ', rowID.find('.hiddenText'));
+                    rowID.find('.hiddenText').val($(this).find('#notesText').val());
+                }
+            });
+         
+  
+
+          //This hooks into the board selection change of the RankingModal
+          $('select[id^="tBoard"]').change(function(e){fillOutTabs($(this));});
+
+
+          $("#submitRanking").click(function() {
+
+            //var mbrInGroup = IsCurrentUserMemberOfGroup(['SC Members']);
+
+            //mbrInGroup.done(function(isInGroup){
+            //    console.log('member is in Group? ', isInGroup);
+            //});
+                
+            
+
+            ruleToChange.backgroundColor=$(this).css('background-color');
+            //check to see if userID has been resolved
+            if(userID!=""){
+                //As long as we have a resolved userID (we always should!!!) then display the Ranking Modal
+                $("#dialog").dialog("open");
+
+                //also check if user has permissions to create a ranking!
+                setTimeout(function(){
+                    alert('Notice: If you are prompted for your certificate/pin please ensure you select the PIV (ending in 004). User must be a part of SC Members group! If not you may be prompted for username/password and/or prompted multiple times to log-in!');
+                },500);
+            }else {
+                console.error('AwardsModular.html:loaded() Warning, userID not resolved, so we cannot launch the Ranking Modal!')
+                alert('Warning could not determine the logged in user ID');
+            }
+          });
+
+      } else {
+        userID = "";
+        alert('Was unable to determine logged in user ID. Ranking Button will remain locked.');
+        console.error('AwardsModular.html:loaded(). Unable to determie logged in user ID. Ranking Button will remain locked.');
+      } 
+
+      //remove scroll lock
+      $('#s4-workspace').css({'overflow':'auto','position':'relative'});
+      $('#s4-workspace').prop('height', $('#s4-workspace').height());
+      $('#s4-workspace').scrollTop(0);
+
+      if(typeof isAdmin!=='undefined'){
+            console.log('!!! Admin Only')
+            //detected that someone in the special group is logged in
+            //getStyle('.adminOnly',sSheet).display='';
+            console.log('discovered all adminOnly objects = ', $('.adminOnly'));
+            $('.adminOnly').show();
+      }else  $('.adminOnly').hide();
+
+       if(typeof awardManagers !=='undefined'){
+           $('.awardManagers').show();
+           //also
+       }else $('.awardManagers').hide();
+
+      //$('#s4-workspace').offsetHeight =$('#s4-workspace').offsetHeight; 
+      //remove the loader/greyed out cover screen
+      document.getElementById("loaderforms").style.display = "none";
+      document.getElementById("greyOutforms").style.display = "none";
+
+    //});
+};
+// #endregion
+ 
+/* var ajaxUserPermissions = checkPermissions();
+                ajaxUserPermissions.done(function(data){
+                    var manageListsPerms = new SP.BasePermissions();
+                    manageListsPerms.initPropertiesFromJson(data.d.EffectiveBasePermissions);
+
+                    var manageLists = manageListsPerms.has(SP.PermissionKind.manageLists);
+
+                     
+                    console.log("Manage Lists: " + manageLists);
+                });
+function checkPermissions()
+{ 
+    UpdateFormDigest(_spPageContextInfo.webServerRelativeUrl, _spFormDigestRefreshInterval);
+    var fullUrl = _spPageContextInfo.webAbsoluteUrl +
+            "/_api/Web/effectiveBasePermissions";
+    var deferred=$.Deferred();
+    var nonext = false;
+    var results = [];
+    getItems();
+
+    function getItems(){ 
+        $.ajax({
+            url: fullUrl,
+            type: "GET",
+            dataType: "json",
+            headers: {
+                "accept": "application/json;odata=verbose",
+                "content-type": "application/json;odata=verbose",
+            },
+            success: function(data){
+                results = results.concat(data.d.results);
+                //this allows us to get over the SP item limit of 100 items returned
+                if (data.d.__next) {
+                    fullUrl = data.d.__next;
+                    getItems();
+                }else{
+                    deferred.resolve(results);
+                }
+            },
+            error: function(data){
+                errorFunction(data);
+                deferred.reject(data);
+            },
+            complete: function(data){
+            }
+        });
+    }
+    return deferred;
+}
+*/
+/*
+function checkPermissions() {
+    var call = jQuery.ajax({
+        url: _spPageContextInfo.webAbsoluteUrl +
+            "/_api/Web/effectiveBasePermissions",
+        type: "GET",
+        dataType: "json",
+        headers: {
+            Accept: "application/json;odata=verbose"
+        }
+    });
+
+    call.done(function (data, textStatus, jqXHR) {
+        var manageListsPerms = new SP.BasePermissions();
+        manageListsPerms.initPropertiesFromJson(data.d.EffectiveBasePermissions);
+
+        var manageLists = manageListsPerms.has(SP.PermissionKind.manageLists);
+
+        var message = jQuery("#message");
+        message.text("Manage Lists: " + manageLists);
+    });
+}
+*/
+
+// #region RankingModal
+// the ranking has to be created in its own modal due to the way the Awards program is setup.
+// The ranking are their own object, so cannot use newform or editform.aspx. Instead a new
+// html form needs to be created that will handle created the rankings for the packages the 
+// logged in user is a registered board member of
+
+var boardUserJudges =[]; //holds the boards objects that the logged in user is a judge of
+var judgeListItemsForUser = []; //holds Judge list items that relate to the user
+
+// #region Entry Point
+// This sets up the Ranking Modal. It is still hidden, this just fills out the tabs/drop down
+// so that when the user clicks the button it loads immediately
+function setupRankingModal(){
+    console.log('AwardsModular.html:setupRankingModal(). FUNCTION called. We are setting up the ranking Modal (will remain hidden until user clics Submit Ranking button)');
+/*
+    $('#NotesModal').on('dialogclose', function(e){
+            
+         });*/
+    //determine if user is a judge of a board
+    //var yearsJudges=[];
+    judgeListItemsForUser =allJudges.filter(function(v){
+         //only include Judges that match logged in user, and whose stat is open
+         if(v.Name==userID && v.Status =="Open"){
+            var r = allBoards.filter(function(b){
+                return b.ID==v.TargetBoard;
+            });
+
+            //if we got a return, then add that to the board that the user judges
+            //   We have prevented a user from signing up to the same board, so we
+            //   should only every get 1 return (which is why weuse r[0])
+            var boardYear = '';
+            if(r.length>0){
+                //ensure board doesnt have a package where status="Closed" 
+                var boardClosed = true;
+                //get all packages that match the board and cat
+                allPackages.filter(function(pckg){
+                    //console.log('pckg.TargetBoard ', pckg.TargetBoard);
+                    //console.log('pckg.Year '+ pckg.Year + ' judge.year ' + v.Year);
+                    //console.log('r[0].Id',pckg.Status);
+                    //pckg.Status!="Closed" && !pckg.Top
+                    if(pckg.TargetBoard==r[0].ID && pckg.Year==v.Year) { //this used to be pckg.Status=="Open" and wihtout !pckg.Top
+                        console.log('year open for board ' + r[0].Name + ' year ' + pckg.Year);
+                        boardClosed=false;
+                        boardYear = pckg.Year;
+                    }
+                });
+
+                if(!boardClosed) {
+                    boardUserJudges.push(r[0]);
+                    console.log('AwardsModular.html: setupRankingModal() | logged in user is a judge for board ' + r[0].Name + 'year ' + boardYear);
+                }else console.log('AwardsModular.html: setupRankingModal() | logged in user is a judge for board ' + r[0].Name + 'year ' + boardYear + ' however a package for that board returned status==closed so the board will not be included to be ranked.');
+            } 
+
+            return true;
+        }else return false;        
+    });
+           
+    //Determine if the logged in user has any boards to judge
+    if(boardUserJudges.length>0){
+        console.log('AwardsModular.html:setupRankingModal(). Determined that logged in user is a part of the Boards ', boardUserJudges);
+        
+        console.log('AwardsModular.html:setupRankingModal(). Unlocking submitRanking button');
+        //allow user to click Ranking button
+        $('#submitRanking').removeClass('locked');
+        //Fill out board select
+        fillOutSelect($('#tBoard'), boardUserJudges);
+    }else{
+        console.log('AwardsModular.html:setupRankingModal(). Determined that logged in user does not rank on any Boards.');
+        $('#submitRanking').hide();    
+    }
+ }
+// #endregion
+
+// #region Fill Out the Board Select Box 
+function fillOutSelect(dropDownBox, boardsToJudge){
+    console.log('AwardsModular.html:fillOutSelect(). FUNCTION called. Will fill out the tBoard from Ranking Modal (holds all boards that the user Judges).');
+    
+    console.log('AwardsModular.html:fillOutSelect(). empty tBoard');
+    //first remove all options from the dropDownBox so that we can
+    //    fill it with the new options
+    dropDownBox.empty();
+
+    //loop through all boards and add them to our rBoard select box
+    $.each(boardsToJudge, function(i, v){
+        dropDownBox.append(new Option(v.Name, v.ID));
+    });
+
+    //now that we are done adding, we need to make sure the first
+    //   board is selected
+    dropDownBox.val(boardsToJudge[0].ID); 
+    
+    console.log('AwardsModular.html:fillOutSelect(). added all Categories for the Boards to tBoard and set the init board to the first item. Our board drop down =', dropDownBox);
+
+    //now fill out all Tabs (based on the dropDownBox)
+    fillOutTabs(dropDownBox);   
+}
+
+// #endregion
+
+// #region Fill Out the Tabs
+function fillOutTabs(targetBoardDropDown){
+    console.log('AwardsModular.html:fillOutTabs(). FUNCTION called. Will fill our Category TABS).');
+
+    // grab our target boards ID from the drop down selected item
+    var rTargetBoardID = targetBoardDropDown.find('option:selected').val();
+    
+    //get the Board object that represents that board
+    var rTargetBoard=allBoards.filter(function(v){
+        return v.ID == rTargetBoardID;
+    });
+
+    //as long as we got a board back, then proceed
+    if(rTargetBoard.length>0){
+         //get the Judge item from our array that matches the target Board
+         //    the reason we do this is to make sure we grab only the Categories that the
+         //    Judge is registered for
+         var j= judgeListItemsForUser.filter(function(v){
+            return v.TargetBoard == rTargetBoardID;
+         });
+
+         if(j.length>0){
+            console.log('AwardsModular.html:fillOutTabs(). Determined for the selected Board that the Judge List Item for it =', j);
+            //store the categories for our tabs
+            var allCat = [];
+
+            if(j[0].Cat!=null){//as long as Cat has some fields
+                //only get the cat that were explicitely added to the judge list
+                allCat = j[0].Cat.split(/\r?\n/).filter(function(item){
+                    var keepItem = false;
+                    $.each(rTargetBoard[0].Categories, function(i,v){
+                        if(v == item){
+                            keepItem=true;
+                        }
+                    });
+
+                    return keepItem;
+                });
+                
+            }else{
+                //console.error(rTargetBoard[0].Categories);
+                // all categories or no categories decision
+                allCat = rTargetBoard[0].Categories;
+            }
+
+            console.log('AwardsModular.html:fillOutTabs(). Determined that the Categories for our Judge for this Board =', allCat);
+
+            //first destroy all current tabs
+            //  this is needed as we may have selected a different board!
+            $('#TabsContainer').empty();
+
+            //loop through each Category and Create its own TAB
+            $.each(allCat, function(i,v){
+                createTab(v, rTargetBoardID, targetBoardDropDown);
+            });
+
+            //This simply makes sure that the first TAB is selected/active
+            $($('#TabsContainer').find('input[type="radio"]')[0]).prop('checked', true);
+         }
+    }else{
+        console.error('AwardsModular.html:fillOutTabs(). We should have found a Board to pull Categories from (and create a TAB), unfortunately none was found!');
+        alert('No board discovered for the target board');
+    }
+}
+// #endregion
+
+// #region Create TAB
+function createTab(catName, tBoard, targetBoardDropDown){
+    console.log('AwardsModular.html:createTab(). FUNCTION called. This creates the inner part of the TAB.');
+
+    //clone our template
+    var content = $('#templateTab').clone();
+    content.removeAttr('id'); //make sure we remove id - not only because we dont want duplicates, but also becuase
+                              //     this id CSS = display:none;
+    //Replace the HTML with custom content
+    var fix = content.html().replace(/{catName}/g, catName);
+    content.html(fix);
+    var fix2 =content.html().replace(/{tableTitle}/, catName);//targetBoardDropDown.find('option:selected').text() + ' Board');
+    content.html(fix2);
+
+    //get all packages that match the board and cat
+    var catPackage = allPackages.filter(function(v){
+        return v.TargetBoard==tBoard && v.Cat==catName; // && v.Status=="Open";
+    });
+    
+    console.log('AwardsModular.html:createTab(). all packages for this cat = ' + catPackage + catName);
+
+    //loop through each of our packages to setup the HTML row, and the rankings
+    $.each(catPackage, function(i,v){
+        console.log(' v = ', v);
+        //store the row HTML that we want to use
+        var packageRow ='<tr class="packageRow" id="package_{ID}">\
+                            <td>{Title}</td>\
+                            <td>{Nominee}</td>\
+                            <td class="tdCat">{Cat}</td>\
+                            <td>{Unit}</td>\
+                            <td style="text-align:center!important;">{attach}</td>\
+                            <td><input class="Score"><input class="NotesBTN" style="display:inline-block; cursor:pointer;" value="Add Notes" type="button"><textarea class="hiddenText"></textarea></td>\
+                            <td><select class="rankingSelect"></select></td>\
+                        </tr>';
+        var Title="";
+        if(typeof(v.Title)!='undefined') Title= v.Title;
+        
+        var maskedID= "MASKED";
+        if(v.MaskedID!=null) maskedID = v.MaskedID;
+        console.log('maskedID ', v);
+        //replace our string HTML with info from our Package Object                
+        packageRow=packageRow.replace(/{Title}/, Title); //Title  '<span class="masked"> MASKED </span>')
+        packageRow=packageRow.replace(/{Nominee}/, v.NomineeName); // + Title.split(' ')[ Title.split(' ').length-1]
+        packageRow=packageRow.replace(/{Unit}/, v.Org);
+        packageRow=packageRow.replace(/{ID}/, v.ID);
+        packageRow=packageRow.replace(/{Cat}/, v.Cat);
+        //Determine if there are attachments and if so act appropriately
+        if(v.Attachments.length>0){ //if attachments then add a button so they can be retrieved
+            packageRow=packageRow.replace(/{attach}/, '<input class="attach" type="button" value="Get" onclick="getAttachments(this, '+ true +')">');
+        }else{ //if no attachments then simply put the word None
+            packageRow=packageRow.replace(/{attach}/, 'None');
+        }
+        
+         
+        //Determine if the judge have a ranking ALREADY for THIS package?
+        var rankingExists = allRankings.filter(function(item){
+            //console.log('AwardsModular.html:createTab(). userID %s==item.Judge %s && item.TargetPackage %s ==  v.ID %s', userID, item.Judge.Id, item.TargetPackage, v.ID);
+            return item.Judge.Id == userID && item.TargetPackage == v.ID;
+        });
+
+      
+
+        //append our HTML package to the template TAB
+        content.find('.content').find('tbody').append(packageRow);
+
+        //Fill out the ranking selects of our template with the default ...
+        content.find('#package_' + v.ID).find('select').append(new Option('...', '...'));
+        
+        //Now we fill out the ranking select
+        //1 to n (n=catPackage.length)
+        for(var index = 1; index <= catPackage.length; index++){
+            content.find('#package_' + v.ID).find('select').append(new Option(index, index));
+        }
+
+        //set actual ranking if it was already saved
+        //this indicates that a ranking exists for this package
+        if(rankingExists.length>0){
+            console.log('AwardsModular:createTab(). A Ranking Already Exists for this package ', rankingExists[0]);
+            console.log('Score = ', rankingExists[0].Score);
+            content.find('#package_' + v.ID).find('.Score').val(rankingExists[0].Score);
+            content.find('#package_' + v.ID).find('select').val(rankingExists[0].Ranking); //set the value of the Ranking that was found
+            content.find('#package_' + v.ID).addClass('savedRow'); //this adds our CSS effect to show that the ranking was saved
+            $(content.find('#package_' + v.ID).find('.Score')[0]).addClass('savedRow');
+
+            //add to notes
+            console.log('notes for rankings = ', rankingExists[0].Notes);
+            content.find('#package_' + v.ID).find('.hiddenText').val(rankingExists[0].Notes);
+        }
+    });
+
+    console.log('all the notes = ', $('.NotesBTN'));
+
+   
+
+    //hook into the change event of our Ranking select
+    content.find('.rankingSelect').change(function(){
+        //we are chaning, so remove the effect to show that the row/package is saved
+        $(this).closest('tr').removeClass('savedRow');
+        $($(this).closest('tr').find('.Score')[0]).removeClass('savedRow');
+
+        //check to see if this row already has a saved Ranking of the selected ranking
+        //  First grab the package ID, which was stored in the tr id
+        var pID = $(this).closest('tr').attr('id').split('_')[1];
+        //  Now set changedRank to our new value
+        var changedRank = $(this).val();
+
+        console.log('AwardsModular:.rankingSelect CHANGE event(). changedRank=', changedRank);
+        console.log('AwardsModular:.rankingSelect CHANGE event(). loopint through allRankings =', allRankings);
+    
+        //Determine if the judge has a ranking ALREADY for THIS package?
+        var rankingExists2 = allRankings.filter(function(item){
+            console.log('AwardsModular:.rankingSelect CHANGE event(). this loop item=', item);
+            console.log('AwardsModular:.rankingSelect CHANGE event(). check if we should return true item.Judge.Id %o == userID %o && item.TargetPackage %o == pID %o && changedRank %o == item.Ranking %o=', item.Judge.Id, userID, item.TargetPackage,pID,changedRank,item.Ranking);
+            return item.Judge.Id == userID && item.TargetPackage.toString() == pID && changedRank==item.Ranking;
+        });
+
+        //This will add back the savedRow effect if from the filter above it was determined that the select box was changed to the known
+        //    value that the Ranking already had
+        if(rankingExists2.length>0){
+            console.log('AwardsModular:createTab(). Rank was determined to not have changed so we will add back the savedRow effect.');
+            $(this).closest('tr').addClass('savedRow');
+            $($(this).closest('tr').find('.Score')[0]).addClass('savedRow');
+        }
+    });
+
+    //if no packages for the category, then make a note of it and ajust for whether the Submit Rankings button on the modal is shown or not
+    if(catPackage.length==0){
+        //hide 
+        content.find('.content').closest('.tab').hide();
+        content.find('.content').find('table').after('<br><br><div class="notificationArea">No Packages found for the '+ catName +' Category</div>');
+    }else{
+        content.find('table').after('<input class="sButton" type="button" value="Submit Ranking(s)" onclick="submitRankings(this)">');
+    }
+
+    //Add our content to the TabsContainer HTML
+    $('#TabsContainer').append(content);
+    $('.NotesBTN').on('click', function(){
+        console.log('Notes button clicked');
+        var tRow = $(this).closest('tr');
+
+        //set the tRow for the modal
+        $('#NotesModal').find('span:first-child').prop('rID',tRow);
+
+        //fill out notes in case there are prev notes
+        $('#NotesModal').find('#notesText').val($(this).closest('tr').find('.hiddenText').val()); 
+
+         //open modal
+         $('#NotesModal').dialog('open');     
+    });
+}
+// #endregion
+
+// #region Submit Rankings
+// Called when the button is clicked to submit the rankings to the Ranking List
+//       This could mean either updating an existing Ranking, or creating a brand new one
+//       if one did not already exist
+function submitRankings(e){
+    console.log('AwardsModular.html:submitRankings(). FUNCTION called. This creates/updates a Ranking list item.');
+
+    //make it so that the form cannot be submitted again/changed (while we are in this function)
+    //    noInteraction covers the RankingModal
+    $('#noInteraction').show();
+
+    //navigate up the DOM then down to the tbody
+    var targetTable = $($($(e).prev()[0]).find('tbody')[0]);
+    var rAll = [];
+
+    console.log('AwardsModular.html:submitRankings(). loop through all rows from the targetTable=', targetTable.find('tr'));
+    //filter out any ... as those we wont be updating/creating new list items
+    var filteredPackageRows = targetTable.find('tr').filter(function(row){
+        var chosenValue = $(this).find('select').val();
+        console.log('AwardsModular.html:submitRankings(). chosenValue for this row loop=', chosenValue);
+        console.log('AwardsModular.html:submitRankings(). Does this row does have the savedRow class=', $(this).hasClass('savedRow'));
+        if(chosenValue != '...'){ //<- recent change, used to be used only for return. rAll.push(chosenValue) jonly had the != ... as condition
+            console.log('AwardsModular.html:submitRankings(). we will add this chosenValue to rAll=', chosenValue);
+            rAll.push(chosenValue);
+            return true;
+        } else return false;
+        //return chosenValue!='...' && !$(this).hasClass('savedRow'); <- recent change
+    });
+    console.log('AwardsModular.html:submitRankings(). loop through all filteredPakcageRows ', filteredPackageRows);
+    console.log('AwardsModular.html:submitRankings(). Looking for duplicates with ', rAll);
+
+    //do we have anything in rAll?
+    if(rAll.length>0){
+
+    //check for duplicates, if any exist none are updated/created and the user is notified    
+    if(hasDuplicates(rAll)){
+        //we cannot immediately alert the user, due to we are shoing the #noInteraction (cant show then immediately hide)
+        //     so we use setTimeout to set a slight delay
+        setTimeout(function() {
+            alert('Duplicate Rankings detected for the '+ $('#tBoard').find('option:selected').text() + ' Board ' + $($(filteredPackageRows[0]).find('.tdCat')[0]).text() + ' Category');
+            console.error('AwardsModular.html:submitRankings(). Duplicate Rankings detected for the ' + $('#tBoard').find('option:selected').text() + ' Board ' + $($(filteredPackageRows[0]).find('.tdCat')[0]).text() + ' Category');
+            $('#noInteraction').hide();
+        }, 10)
+
+    }else{
+        //proceed with saving the rankings
+        console.log('AwardsModular.html:submitRankings(). We will attempt to save ' + filteredPackageRows + ' Rankings');
+        //loop through all of our rows (packages)
+        $.each(filteredPackageRows, function(i,v){
+            console.log('AwardsModular.html:submitRankings(). Rankings to save: i=%o v=%o', i, v);
+            var rank = $(v).find('select').val();
+            
+            //First we set the item properties that we want to save/update
+            var itemProperties = {};
+            itemProperties["Ranking"] = $(this).find('select').val();
+            itemProperties["JudgeId"] = userID.toString();
+            itemProperties["TargetPackageId"] = $(this).attr('id').split('_')[1];
+            var convertToNumber =parseFloat($($(this).find('.Score')[0]).val());
+            if(isNaN(convertToNumber)) convertToNumber=0.0;
+            itemProperties["Score"] = convertToNumber;
+            itemProperties["Notes"] = $(v).find('.hiddenText').val();        
+
+            console.log('note text =', $(v).find('.hiddenText').val());
+
+            console.log('attempt to save score as ', $($(this).find('.Score')[0]).val());
+            console.log('AwardsModular.html:submitRankings(). Attempt to see if Ranking exists with TargetPackageId = ',  itemProperties["TargetPackageId"] );
+            console.log('AwardsModular.html:submitRankings(). Attempt to see if Ranking exists with JudgeId  = ',  userID);
+            //update or create? - does ranking item already exist?
+            var rankAlreadyExists = allRankings.filter(function(rankItem){
+                console.log(rankItem.TargetPackage + ' ' + rankItem.Judge.Id);
+                if(rankItem.TargetPackage==itemProperties["TargetPackageId"] && rankItem.Judge.Id==userID){
+                    console.log('AwardsModular.html:submitRankings(). rankItem.TargetPackage %s == itemProperties["TargetPackageId"] %s && rankItem.Judge.Id %s == userID %s', rankItem.TargetPackage, itemProperties["TargetPackageId"],rankItem.Judge.Id,userID);
+                }
+                return rankItem.TargetPackage==itemProperties["TargetPackageId"] && rankItem.Judge.Id==userID;
+            });
+
+            //used to apply/remove the savedRow effect
+            var tRow = $(this);
+
+            //Determine if Ranking already exists
+            if(rankAlreadyExists.length>0){
+
+                //ranking exists, we only need to update!
+                console.log('AwardsModular.html:submitRankings(). Ranking Exists, we only need to update.');
+                var ajaxUpdateItem = SPHUpdateItemByID('Rankings', rankAlreadyExists[0].ID, {'Ranking':itemProperties['Ranking'], 'Score':itemProperties['Score'], 'Notes': itemProperties["Notes"]}, baseURL, SPHGetItemType('Rankings'));
+                         
+                ajaxUpdateItem.done(function(data){
+                //success
+                console.log('AwardsModular.html:submitRankings(). Ranking ID=' + rankAlreadyExists[0].ID + ' Updated');
+                
+                //effect highlight row to show it was recently saved
+                tRow.addClass('savedRow');
+                $(tRow.find('.Score')[0]).addClass('savedRow');
+
+                //also lets update the globall allRankings so we can pull the new rank appropriately
+                //allRankings = [];
+
+                //getAllRankings();
+                $('#noInteraction').hide(); //we are done, so reveal form again so further edits can be made
+                
+                    //update the ranking
+
+
+                }).fail(function(e){ alert('Failed updating List Item! ' + e.responseText);
+                    console.error('AwardsModular.html:submitRankings(). Failed to update Ranking item: ' + e.responseText);
+                    $('#noInteraction').hide(); //there was an issue, so keep form locked out
+                });
+            }else{
+                //create a new ranking as one does not already exist
+                console.log('AwardsModular.html:submitRankings(). Creating new Ranking item.');
+
+                var ajaxCreateItem = SPHCreateListItem('Rankings', itemProperties, baseURL, SPHGetItemType('Rankings'));
+
+                ajaxCreateItem.done(function(data){
+                //success
+                //create a new ranking as one does not already exist
+                console.log('AwardsModular.html:submitRankings(). Ranking item created successfully.', data);
+                //ID, Judge, TargetPackage, Ranking, JudgeTitle, Score, Notes
+                allRankings.push(new Rankings(data.d.ID,  {'Id':data.d.AuthorId}, data.d.TargetPackageId, data.d.Ranking, data.d.Score , data.d.Notes ));
+
+                //effect highlight row to show it was recently saved
+                tRow.addClass('savedRow');
+                $(tRow.find('.Score')[0]).addClass('savedRow');
+                    //update the ranking with the new item
+
+                $('#noInteraction').hide();
+                }).fail(function(e){ alert('Failed creating List Item! ' + e.responseText);
+                    console.error('AwardsModular.html:submitRankings(). Failed to create a new Ranking item: ' + e.responseText);    
+                    $('#noInteraction').hide();
+                });
+            }
+        });
+
+        
+
+                //reload the page so the info Pull out shows the correct Rankings (otherwise we get duplicates... not quite sure why)
+                //also lets update the globall allRankings so we can pull the new rank appropriately
+               
+                //allRankings = [];
+                //console.log('allRankings empty = ', allRankings);
+                //getAllRankings();
+    }
+}else{
+    $('#noInteraction').hide();
+    console.log('AwardsModular.html:submitRankings(). rAll.length==0 indicating the ranking was already saved and no update/save is needed.');   
+}
+
+}
+// #endregion
+
+// #region Get All Rankings
+//   Handles updating the global AllRankings with any new Rankings from the Rankings Modal
+function getAllRankings(){
+    console.log('AwardsModular.html:getAllRankings(). FUNCTION called. This updates the global AllRankings with any new updates/changes.');
+
+    //Rankings
+    var ajaxRankings = SPHGetListItems('Rankings', '?$select=Id,Ranking,Notes,Score,TargetPackageId,Judge/Title,Judge/Id&$expand=Judge', baseURL);
+
+    ajaxRankings.done(function(data){
+        console.log('ajaxdata ', data);
+        //loop through and add our Rankings items to the global array
+        $.each(data, function(i,v){  
+             
+            allRankings.push(new Rankings(v.ID, v.Judge, v.TargetPackageId, v.Ranking, v.Judge.Title, v.Score, v.Notes));
+  
+           
+        });
+        console.log('AwardsModular.html:getAllRankings(). allRanking() global variable updated ', allRankings);
+    }).fail(function(e){ 
+        console.error('AwardsModular.html:getAllRankings(). Failed to grab Ranking items to update allRankings(): ' + e.responseText);    
+        alert('Failed Getting Rankings List Items! ' + e.responseText);
+    });
+}
+// #endregion
+
+
+
+// #endregion
+
+
+ 
+</script><html xmlns:mso="urn:schemas-microsoft-com:office:office" xmlns:msdt="uuid:C2F41010-65B3-11d1-A29F-00AA00C14882"><head>
+<!--[if gte mso 9]><xml>
+<mso:CustomDocumentProperties>
+<mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Editor msdt:dt="string">BECHARD, WILLIAM J MSgt USAF HAF NASIC/SCP</mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Editor>
+<mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Author msdt:dt="string">BECHARD, WILLIAM J MSgt USAF HAF NASIC/SCP</mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Author>
+<mso:Order msdt:dt="string">1000.00000000000</mso:Order>
+</mso:CustomDocumentProperties>
+</xml><![endif]-->
+</head>
